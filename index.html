@@ -1,0 +1,1893 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bảng Thảo Luận Lớp Học - Tin Học & Lập Trình</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Highlight.js (Light Theme cho Code Python) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      background-image: radial-gradient(#cbd5e1 0.85px, transparent 0.85px);
+      background-size: 20px 20px;
+    }
+    code, pre, textarea.code-input {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .hljs {
+      background: rgba(241, 245, 249, 0.9) !important;
+      padding: 0.875rem !important;
+      border-radius: 0.5rem;
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+    @keyframes heartPop {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.28); }
+      100% { transform: scale(1); }
+    }
+    .animate-heart {
+      animation: heartPop 0.28s ease-out;
+    }
+  </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col">
+
+  <!-- TOAST THÔNG BÁO -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 hidden transform transition-all duration-300 translate-y-2 opacity-0 max-w-md">
+    <div id="toast-box" class="flex items-start gap-2.5 px-4 py-3 rounded-xl shadow-lg border bg-white text-sm font-medium">
+      <i id="toast-icon" data-lucide="info" class="w-4 h-4 shrink-0 mt-0.5"></i>
+      <span id="toast-msg">Thông báo</span>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MÀN HÌNH 1: CỔNG VÀO (LOBBY)
+  ========================================================== -->
+  <main id="screen-lobby" class="flex-1 flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl shadow-slate-200/70 border border-slate-200 overflow-hidden">
+      <div class="bg-gradient-to-r from-indigo-600 to-blue-600 p-6 text-white text-center">
+        <div class="w-12 h-12 bg-white/15 backdrop-blur rounded-xl flex items-center justify-center mx-auto mb-3">
+          <i data-lucide="layout-grid" class="w-6 h-6 text-white"></i>
+        </div>
+        <h1 class="text-xl font-bold tracking-tight">Bảng Thảo Luận Lớp Học</h1>
+        <p class="text-blue-100 text-sm mt-1">Chia sẻ ý kiến thảo luận & bài làm thời gian thực</p>
+      </div>
+
+      <!-- Cảnh báo nếu chưa dán link Apps Script -->
+      <div id="config-warning" class="hidden bg-amber-50 border-b border-amber-200 px-5 py-3 text-xs text-amber-800 flex items-start gap-2">
+        <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>
+        <div>
+          <strong>Chưa dán link Google Sheets:</strong> Hãy mở tệp <code class="bg-amber-100 px-1 rounded">index.html</code> và điền link Web App vào biến <code class="bg-amber-100 px-1 rounded">SCRIPT_URL</code>.
+        </div>
+      </div>
+
+      <div class="p-6">
+        <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl mb-6">
+          <button id="tab-student" type="button" onclick="switchRole('student')"
+            class="flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-lg bg-white text-indigo-600 shadow-sm transition">
+            <i data-lucide="users" class="w-4 h-4"></i> Học sinh
+          </button>
+          <button id="tab-teacher" type="button" onclick="switchRole('teacher')"
+            class="flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition">
+            <i data-lucide="shield-check" class="w-4 h-4"></i> Giáo viên
+          </button>
+        </div>
+
+        <!-- Form Học sinh -->
+        <form id="form-student" onsubmit="handleStudentJoin(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Mã phòng học</label>
+            <input id="stu-room-id" type="text" required placeholder="VD: TIN10-B16"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none uppercase font-semibold tracking-wide text-slate-800" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Tên nhóm</label>
+            <input id="stu-group-name" type="text" required placeholder="VD: Nhóm 1"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-slate-800" />
+            <div class="flex flex-wrap items-center gap-1.5 mt-2">
+              <span class="text-[11px] text-slate-400">Chọn nhanh:</span>
+              <button type="button" onclick="pickGroupName('Nhóm 1')" class="px-2 py-0.5 text-xs rounded-md bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 font-medium transition">Nhóm 1</button>
+              <button type="button" onclick="pickGroupName('Nhóm 2')" class="px-2 py-0.5 text-xs rounded-md bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 font-medium transition">Nhóm 2</button>
+              <button type="button" onclick="pickGroupName('Nhóm 3')" class="px-2 py-0.5 text-xs rounded-md bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 font-medium transition">Nhóm 3</button>
+              <button type="button" onclick="pickGroupName('Nhóm 4')" class="px-2 py-0.5 text-xs rounded-md bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 font-medium transition">Nhóm 4</button>
+              <button type="button" onclick="pickGroupName('Nhóm 5')" class="px-2 py-0.5 text-xs rounded-md bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 font-medium transition">Nhóm 5</button>
+              <button type="button" onclick="pickGroupName('Nhóm 6')" class="px-2 py-0.5 text-xs rounded-md bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 font-medium transition">Nhóm 6</button>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Tên thành viên (Tùy chọn)</label>
+            <input id="stu-member-name" type="text" placeholder="VD: Nguyễn Minh Anh"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-slate-800" />
+          </div>
+          <button type="submit" id="btn-stu-join"
+            class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-md shadow-indigo-200 transition flex items-center justify-center gap-2">
+            <span>Vào bảng thảo luận</span>
+            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          </button>
+        </form>
+
+        <!-- Form Giáo viên -->
+        <form id="form-teacher" onsubmit="handleTeacherJoin(event)" class="space-y-4 hidden">
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Mã phòng (Tạo mới hoặc vào lại)</label>
+            <input id="tch-room-id" type="text" required placeholder="VD: TIN10-B16"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none uppercase font-semibold tracking-wide text-slate-800" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Tên chủ đề / Bài học (Nếu tạo phòng mới)</label>
+            <input id="tch-room-title" type="text" placeholder="VD: Thảo luận Bài 16: Cấu trúc rẽ nhánh"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-slate-800" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Mã PIN quản trị phòng</label>
+            <input id="tch-pin" type="password" required placeholder="Nhập mã PIN (VD: 1234)"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-slate-800" />
+          </div>
+          <button type="submit" id="btn-tch-join"
+            class="w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl shadow-md transition flex items-center justify-center gap-2">
+            <i data-lucide="key-round" class="w-4 h-4"></i>
+            <span>Mở bảng điều khiển Giáo viên</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- =========================================================
+       MÀN HÌNH 2 & 3: KHÔNG GIAN PHÒNG HỌC
+  ========================================================== -->
+  <div id="screen-board" class="hidden flex-1 flex flex-col">
+    <header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200 shadow-sm">
+      <div class="max-w-7xl mx-auto px-4 py-2 flex flex-wrap items-center justify-between gap-2.5">
+        <div class="flex items-center gap-3">
+          <div class="px-3 py-1 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-lg font-bold text-sm tracking-wide" id="board-room-badge">
+            TIN10
+          </div>
+          <div>
+            <h2 id="board-room-title" class="font-bold text-slate-900 text-base leading-tight">Tên chủ đề thảo luận</h2>
+            <div class="flex items-center gap-2 text-xs text-slate-500 mt-0.5 flex-wrap">
+              <span id="board-role-label" class="font-medium text-indigo-600">Vai trò</span>
+              <span>•</span>
+              <span id="board-post-count">0 thẻ bài</span>
+              <span>•</span>
+              <span class="inline-flex items-center gap-1 text-emerald-600 font-medium">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Đồng bộ thời gian thực
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap">
+          <div id="teacher-controls" class="hidden flex items-center gap-2 flex-wrap">
+            <!-- Công tắc Ẩn / Hiện bài cả lớp -->
+            <button id="btn-toggle-public" type="button" onclick="toggleRoomPublic()"
+              class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl font-semibold text-sm border-2 transition-all shadow-sm">
+              <span id="toggle-status-icon">🔒</span>
+              <span id="toggle-status-text">Đang ẩn bài các nhóm</span>
+            </button>
+
+            <!-- Công tắc Chế độ Giám sát chuyển tab / dán bài -->
+            <button id="btn-toggle-strict" type="button" onclick="toggleStrictMode()"
+              title="Bật để cảnh báo học sinh khi rời tab hoặc dán nội dung từ bên ngoài"
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold text-xs border transition-all bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100">
+              <i data-lucide="shield-alert" class="w-4 h-4"></i>
+              <span id="strict-status-text">Giám sát: Bật</span>
+            </button>
+
+            <button type="button" onclick="copyInviteLink()" title="Sao chép link gửi cho học sinh"
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition">
+              <i data-lucide="link" class="w-4 h-4"></i>
+              <span class="hidden sm:inline">Copy Link HS</span>
+            </button>
+          </div>
+
+          <div id="student-status-pill" class="hidden px-3 py-1 rounded-full text-xs font-semibold border flex items-center gap-1.5">
+          </div>
+
+          <button type="button" onclick="leaveRoom()"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 text-slate-600 text-sm font-medium transition">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+            <span>Thoát</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div id="student-banner" class="hidden border-b px-4 py-2 text-sm">
+      <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2" id="student-banner-content"></div>
+    </div>
+
+    <div class="max-w-7xl w-full mx-auto px-4 py-3 flex-1">
+
+      <!-- =========================================================
+           THANH CHUYỂN ĐỔI 2 THẺ CHÍNH: THẢO LUẬN & THEO DÕI TIẾN ĐỘ
+      ========================================================== -->
+      <nav aria-label="Chuyển đổi không gian làm việc"
+        class="mb-3 bg-white p-1 rounded-2xl border border-slate-200 shadow-sm grid grid-cols-2 gap-1.5">
+        <button id="main-tab-discussion" type="button" onclick="switchMainTab('discussion')"
+          class="flex items-center justify-center gap-2 py-2 px-3 rounded-xl font-bold text-sm transition-all bg-indigo-600 text-white shadow-sm">
+          <i data-lucide="messages-square" class="w-4 h-4"></i>
+          <span>Thảo luận</span>
+          <span id="badge-tab-discussion"
+            class="px-2 py-0.5 text-xs rounded-full bg-white/20 text-white font-semibold">0</span>
+        </button>
+
+        <button id="main-tab-progress" type="button" onclick="switchMainTab('progress')"
+          class="flex items-center justify-center gap-2 py-2 px-3 rounded-xl font-bold text-sm transition-all text-slate-600 hover:bg-slate-50 hover:text-slate-900">
+          <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+          <span>Theo dõi tiến độ</span>
+          <span id="badge-tab-progress"
+            class="px-2 py-0.5 text-xs rounded-full bg-slate-100 text-slate-600 font-semibold">0/4 nhóm</span>
+        </button>
+      </nav>
+
+      <!-- =========================================================
+           THẺ 1: KHÔNG GIAN THẢO LUẬN (SOẠN THẢO + LƯỚI THẺ BÀI)
+      ========================================================== -->
+      <div id="panel-discussion" class="space-y-5">
+        <!-- KHUNG SOẠN THẢO THẺ BÀI KIỂU PADLET -->
+        <section id="student-composer" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm p-5 transition-all">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <h3 class="font-bold text-slate-800 flex items-center gap-2 text-base">
+              <i data-lucide="message-square-plus" class="w-5 h-5 text-indigo-600"></i>
+              <span id="composer-heading">Tạo thẻ thảo luận mới</span>
+            </h3>
+
+            <!-- Bảng chọn màu thẻ (Đồng bộ trực tiếp với màu thanh tiến độ nhóm) -->
+            <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+              <span class="text-xs font-medium text-slate-500">Màu thẻ & thanh tiến độ:</span>
+              <button type="button" onclick="selectCardColor('sky')" data-color="sky" title="Xanh dương"
+                class="color-dot w-5 h-5 rounded-full bg-sky-200 border-2 border-sky-600 ring-2 ring-sky-200 transition"></button>
+              <button type="button" onclick="selectCardColor('emerald')" data-color="emerald" title="Xanh ngọc"
+                class="color-dot w-5 h-5 rounded-full bg-emerald-200 border border-emerald-400 hover:scale-110 transition"></button>
+              <button type="button" onclick="selectCardColor('amber')" data-color="amber" title="Vàng cam"
+                class="color-dot w-5 h-5 rounded-full bg-amber-200 border border-amber-400 hover:scale-110 transition"></button>
+              <button type="button" onclick="selectCardColor('rose')" data-color="rose" title="Hồng phấn"
+                class="color-dot w-5 h-5 rounded-full bg-rose-200 border border-rose-400 hover:scale-110 transition"></button>
+              <button type="button" onclick="selectCardColor('violet')" data-color="violet" title="Tím nhạt"
+                class="color-dot w-5 h-5 rounded-full bg-violet-200 border border-violet-400 hover:scale-110 transition"></button>
+            </div>
+          </div>
+
+          <form onsubmit="handlePostSubmit(event)" class="space-y-3">
+            <input type="hidden" id="edit-post-id" value="" />
+            <input type="hidden" id="post-color" value="sky" />
+
+            <div>
+              <input id="post-title" type="text" maxlength="120"
+                onfocus="handleComposerFocus()" onblur="handleComposerBlur()"
+                oninput="handleLiveTyping()" onpaste="handleComposerPaste(event)"
+                placeholder="Tiêu đề thẻ bài (VD: Ý kiến thảo luận số 1 / Giải pháp của nhóm...)"
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none font-semibold text-sm text-slate-900 placeholder:font-normal" />
+            </div>
+
+            <div>
+              <textarea id="post-content" rows="4"
+                onfocus="handleComposerFocus()" onblur="handleComposerBlur()"
+                oninput="handleLiveTyping()" onpaste="handleComposerPaste(event)"
+                placeholder="Viết nội dung thảo luận, phân tích vấn đề, lập luận hoặc câu trả lời của nhóm tại đây..."
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm text-slate-800 leading-relaxed"></textarea>
+            </div>
+
+            <div id="code-drawer" class="hidden pt-1">
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="text-xs font-semibold text-slate-600 flex items-center gap-1.5">
+                  <i data-lucide="terminal" class="w-3.5 h-3.5 text-indigo-600"></i>
+                  <span>Đoạn mã Python đính kèm (Hỗ trợ phím Tab thụt lề)</span>
+                </label>
+                <button type="button" onclick="insertPythonTemplate()"
+                  class="text-xs font-medium px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
+                  + Chèn mẫu if-else
+                </button>
+              </div>
+              <textarea id="post-code" rows="5"
+                onfocus="handleComposerFocus()" onblur="handleComposerBlur()"
+                oninput="handleLiveTyping()" onpaste="handleComposerPaste(event)"
+                placeholder="# Nhập hoặc dán code Python tại đây&#10;n = int(input('Nhập n: '))&#10;if n % 2 == 0:&#10;    print('Số chẵn')"
+                class="code-input w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-xs sm:text-sm text-slate-800"></textarea>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <button type="button" id="btn-toggle-code" onclick="toggleCodeDrawer()"
+                  class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold transition">
+                  <i data-lucide="code-2" class="w-4 h-4 text-indigo-600"></i>
+                  <span id="btn-toggle-code-text">Đính kèm Code Python</span>
+                </button>
+                <span id="composer-char-counter" class="text-xs text-slate-400 font-medium">0 ký tự</span>
+                <span id="student-self-monitor-badge" class="hidden text-xs font-medium px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-800"></span>
+              </div>
+
+              <div class="flex items-center gap-2 ml-auto">
+                <button type="button" id="btn-cancel-edit" onclick="resetComposer()"
+                  class="hidden px-4 py-2 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-100 text-sm font-medium transition">
+                  Hủy sửa
+                </button>
+                <button type="submit" id="btn-submit-post"
+                  class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-sm transition flex items-center gap-2">
+                  <i data-lucide="send" class="w-4 h-4"></i>
+                  <span id="btn-submit-post-text">Đăng thẻ bài</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </section>
+
+        <!-- LƯỚI HIỂN THỊ CÁC THẺ BÀI -->
+        <div id="empty-state" class="hidden text-center py-16 bg-white/80 rounded-2xl border border-dashed border-slate-300">
+          <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-400">
+            <i data-lucide="inbox" class="w-6 h-6"></i>
+          </div>
+          <h4 class="font-semibold text-slate-700">Chưa có thẻ bài nào hiển thị</h4>
+          <p class="text-sm text-slate-500 mt-1" id="empty-state-sub">Các ý kiến thảo luận của nhóm sẽ xuất hiện ngay lập tức tại đây.</p>
+        </div>
+
+        <div id="posts-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 items-start">
+        </div>
+      </div>
+
+      <!-- =========================================================
+           THẺ 2: THEO DÕI TIẾN ĐỘ (MỖI NHÓM 1 THANH CÙNG MÀU THẺ ĐÃ CHỌN)
+      ========================================================== -->
+      <div id="panel-progress" class="hidden">
+        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-3.5 sm:p-4">
+          <!-- Header & Bộ chỉ số tổng quan gọn gàng -->
+          <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 mb-3 border-b border-slate-200/80">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-slate-900 text-sm sm:text-base leading-tight">Theo dõi tiến độ thực hiện của từng nhóm</h3>
+                <p class="text-xs text-slate-500" id="progress-subtitle">
+                  Màu sắc và độ dài mỗi thanh tương ứng với màu thẻ đã chọn và khối lượng văn bản nhóm đang thực hiện.
+                </p>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-1.5 text-xs">
+              <!-- Nút điều chỉnh tổng số nhóm dành riêng cho Giáo viên -->
+              <div id="teacher-group-target" class="hidden items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 font-medium">
+                <span>Tổng số nhóm:</span>
+                <button type="button" onclick="changeTotalGroups(-1)" class="w-5 h-5 rounded bg-white hover:bg-slate-200 border border-slate-300 font-bold flex items-center justify-center">-</button>
+                <span id="target-groups-val" class="font-bold text-indigo-700 px-1">4</span>
+                <button type="button" onclick="changeTotalGroups(1)" class="w-5 h-5 rounded bg-white hover:bg-slate-200 border border-slate-300 font-bold flex items-center justify-center">+</button>
+              </div>
+
+              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-700 font-semibold">
+                <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
+                <span id="progress-groups-stat">0/4 nhóm đã nộp (0%)</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Danh sách thanh tiến độ của TỪNG NHÓM (Tối đa 5 nhóm hiển thị gọn không cần cuộn) -->
+          <div id="per-group-progress-list" class="space-y-2">
+            <!-- Render tự động mỗi nhóm 1 thanh tại đây -->
+          </div>
+        </section>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =========================================================
+       LOGIC KẾT NỐI GOOGLE SHEETS & GIÁM SÁT HÀNH VI THỜI GIAN THỰC
+  ========================================================== -->
+  <script>
+    // =========================================================================
+    // LINK WEB APP CỦA GOOGLE APPS SCRIPT:
+    // =========================================================================
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyx5Idfq8cjqJ0l-1QIi0skW6E1Kcvi3CC5ZJLaIRc2cvnP8ROHLDHleTFoLTMFfpT_TQ/exec";
+    // =========================================================================
+
+    const isConfigured = SCRIPT_URL && SCRIPT_URL.startsWith("https://script.google.com/");
+    if (!isConfigured) {
+      document.getElementById("config-warning").classList.remove("hidden");
+    }
+
+    let myMemberId = sessionStorage.getItem("padlet_member_id");
+    if (!myMemberId) {
+      myMemberId = "mem_" + Math.random().toString(36).substring(2, 10) + "_" + Date.now().toString(36);
+      sessionStorage.setItem("padlet_member_id", myMemberId);
+    }
+
+    function normalizeVi(str) {
+      return String(str || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[àáạảãâầấậẩẫăằắặẳẵ]/g, "a")
+        .replace(/[èéẹẻẽêềếệểễ]/g, "e")
+        .replace(/[ìíịỉĩ]/g, "i")
+        .replace(/[òóọỏõôồốộổỗơờớợởỡ]/g, "o")
+        .replace(/[ùúụủũưừứựửữ]/g, "u")
+        .replace(/[ỳýỵỷỹ]/g, "y")
+        .replace(/đ/g, "d")
+        .replace(/\s+/g, "_");
+    }
+
+    function getNormalizedGroupKey(roomId, groupName) {
+      return `grp_${roomId.trim().toUpperCase()}_${normalizeVi(groupName)}`;
+    }
+
+    function getSavedPostIds() {
+      try {
+        return JSON.parse(localStorage.getItem("padlet_my_post_ids") || "[]");
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function rememberPostId(postId) {
+      if (!postId) return;
+      const list = getSavedPostIds();
+      if (!list.includes(postId)) {
+        list.push(postId);
+        localStorage.setItem("padlet_my_post_ids", JSON.stringify(list));
+      }
+    }
+
+    function checkIsMine(post) {
+      if (state.role !== "student") return false;
+      if (post.isMine === true) return true;
+      if (state.groupKey && (post.authorId === state.groupKey || post.groupKey === state.groupKey)) return true;
+      if (state.groupName && post.groupName && normalizeVi(post.groupName) === normalizeVi(state.groupName)) return true;
+      if (post.id && getSavedPostIds().includes(post.id)) return true;
+      return false;
+    }
+
+    window.pickGroupName = (name) => {
+      document.getElementById("stu-group-name").value = name;
+    };
+
+    const COLOR_KEYS = ["sky", "emerald", "amber", "rose", "violet"];
+
+    const CARD_THEMES = {
+      sky: {
+        label: "Xanh dương",
+        card: "bg-sky-50/85 border-sky-200 hover:border-sky-300",
+        dotBase: "bg-sky-200 border-sky-400",
+        dotActive: "bg-sky-200 border-2 !border-sky-600 ring-2 ring-sky-200",
+        bar: "from-sky-500 to-blue-600",
+        badge: "bg-sky-50 text-sky-700 border-sky-200",
+        indicator: "bg-sky-500",
+        rowBg: "border-sky-200/90 bg-sky-50/35"
+      },
+      emerald: {
+        label: "Xanh ngọc",
+        card: "bg-emerald-50/85 border-emerald-200 hover:border-emerald-300",
+        dotBase: "bg-emerald-200 border-emerald-400",
+        dotActive: "bg-emerald-200 border-2 !border-emerald-600 ring-2 ring-emerald-200",
+        bar: "from-emerald-500 to-teal-600",
+        badge: "bg-emerald-50 text-emerald-700 border-emerald-200",
+        indicator: "bg-emerald-500",
+        rowBg: "border-emerald-200/90 bg-emerald-50/35"
+      },
+      amber: {
+        label: "Vàng cam",
+        card: "bg-amber-50/85 border-amber-200 hover:border-amber-300",
+        dotBase: "bg-amber-200 border-amber-400",
+        dotActive: "bg-amber-200 border-2 !border-amber-600 ring-2 ring-amber-200",
+        bar: "from-amber-400 to-orange-500",
+        badge: "bg-amber-50 text-amber-800 border-amber-200",
+        indicator: "bg-amber-500",
+        rowBg: "border-amber-200/90 bg-amber-50/35"
+      },
+      rose: {
+        label: "Hồng phấn",
+        card: "bg-rose-50/85 border-rose-200 hover:border-rose-300",
+        dotBase: "bg-rose-200 border-rose-400",
+        dotActive: "bg-rose-200 border-2 !border-rose-600 ring-2 ring-rose-200",
+        bar: "from-rose-500 to-pink-600",
+        badge: "bg-rose-50 text-rose-700 border-rose-200",
+        indicator: "bg-rose-500",
+        rowBg: "border-rose-200/90 bg-rose-50/35"
+      },
+      violet: {
+        label: "Tím nhạt",
+        card: "bg-violet-50/85 border-violet-200 hover:border-violet-300",
+        dotBase: "bg-violet-200 border-violet-400",
+        dotActive: "bg-violet-200 border-2 !border-violet-600 ring-2 ring-violet-200",
+        bar: "from-violet-500 to-purple-600",
+        badge: "bg-violet-50 text-violet-700 border-violet-200",
+        indicator: "bg-violet-500",
+        rowBg: "border-violet-200/90 bg-violet-50/35"
+      }
+    };
+
+    function resolveTheme(colorKey) {
+      if (colorKey && CARD_THEMES[colorKey]) {
+        return CARD_THEMES[colorKey];
+      }
+      return CARD_THEMES.sky;
+    }
+
+    function getDefaultColorForGroup(groupName) {
+      const match = String(groupName || "").match(/(\d+)/);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (!isNaN(num) && num > 0) {
+          return COLOR_KEYS[(num - 1) % COLOR_KEYS.length];
+        }
+      }
+      return "sky";
+    }
+
+    const state = {
+      role: "student",
+      activeMainTab: "discussion",
+      roomId: "",
+      roomData: null,
+      progressData: null,
+      groupName: "",
+      memberName: "",
+      groupKey: "",
+      teacherPin: "",
+      posts: [],
+      codeDrawerOpen: false,
+      pollTimer: null,
+      composerFocused: false,
+      lastTypingAt: 0,
+      prevLiveLen: 0,
+      lastPasteEventMs: 0,
+      // Giám sát hành vi chuyển tab & dán văn bản
+      monitor: {
+        tabLeaves: 0,
+        awaySeconds: 0,
+        pasteCount: 0,
+        pastedChars: 0,
+        suspiciousPaste: false
+      },
+      isAway: false,
+      awayStartMs: 0,
+      lastReturnFromAwayMs: 0,
+      lastMonitorSyncMs: 0
+    };
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomParam = urlParams.get("room");
+    if (roomParam) {
+      document.getElementById("stu-room-id").value = roomParam.toUpperCase();
+      document.getElementById("tch-room-id").value = roomParam.toUpperCase();
+    }
+
+    document.getElementById("post-code").addEventListener("keydown", function (e) {
+      if (e.key === "Tab") {
+        e.preventDefault();
+        const start = this.selectionStart;
+        const end = this.selectionEnd;
+        this.value = this.value.substring(0, start) + "    " + this.value.substring(end);
+        this.selectionStart = this.selectionEnd = start + 4;
+      }
+    });
+
+    // =========================================================================
+    // GIÁM SÁT CHUYỂN TAB / RỜI CỬA SỔ & GẮN CỜ DÁN VĂN BẢN
+    // =========================================================================
+    function getMonitorStorageKey() {
+      if (!state.roomId || !state.groupName) return "";
+      return `padlet_mon_${state.roomId}_${normalizeVi(state.groupName)}`;
+    }
+
+    function loadLocalMonitor() {
+      const key = getMonitorStorageKey();
+      if (!key) return;
+      try {
+        const saved = JSON.parse(localStorage.getItem(key) || "null");
+        if (saved && typeof saved === "object") {
+          state.monitor.tabLeaves = Math.max(state.monitor.tabLeaves, Number(saved.tabLeaves) || 0);
+          state.monitor.awaySeconds = Math.max(state.monitor.awaySeconds, Number(saved.awaySeconds) || 0);
+          state.monitor.pasteCount = Math.max(state.monitor.pasteCount, Number(saved.pasteCount) || 0);
+          state.monitor.pastedChars = Math.max(state.monitor.pastedChars, Number(saved.pastedChars) || 0);
+          state.monitor.suspiciousPaste = Boolean(state.monitor.suspiciousPaste || saved.suspiciousPaste);
+        }
+      } catch (e) {}
+      updateStudentSelfMonitorUI();
+    }
+
+    function saveLocalMonitor() {
+      const key = getMonitorStorageKey();
+      if (!key) return;
+      try {
+        localStorage.setItem(key, JSON.stringify(state.monitor));
+      } catch (e) {}
+      updateStudentSelfMonitorUI();
+    }
+
+    function updateStudentSelfMonitorUI() {
+      const badge = document.getElementById("student-self-monitor-badge");
+      if (!badge || state.role !== "student") return;
+      const m = state.monitor;
+      if (m.tabLeaves === 0 && m.pasteCount === 0) {
+        badge.classList.add("hidden");
+        return;
+      }
+      const parts = [];
+      if (m.tabLeaves > 0) parts.push(`Rời màn hình: ${m.tabLeaves} lần (${m.awaySeconds}s)`);
+      if (m.pasteCount > 0) parts.push(`Dán văn bản: ${m.pasteCount} lần (${m.pastedChars} ký tự)`);
+      badge.textContent = "⚠️ " + parts.join(" • ");
+      badge.classList.remove("hidden");
+    }
+
+    function syncMonitorToServer(useBeacon = false) {
+      if (state.role !== "student" || !state.roomId || !isConfigured) return;
+      const now = Date.now();
+      if (!useBeacon && (now - state.lastMonitorSyncMs) < 2500) return;
+      state.lastMonitorSyncMs = now;
+
+      const payload = JSON.stringify({
+        action: "reportActivity",
+        roomId: state.roomId,
+        memberId: myMemberId,
+        memberName: state.memberName || state.groupName,
+        groupName: state.groupName,
+        tabLeaves: state.monitor.tabLeaves,
+        awaySeconds: state.monitor.awaySeconds,
+        pasteCount: state.monitor.pasteCount,
+        pastedChars: state.monitor.pastedChars,
+        suspiciousPaste: state.monitor.suspiciousPaste
+      });
+
+      if (useBeacon && navigator.sendBeacon) {
+        try {
+          const blob = new Blob([payload], { type: "text/plain;charset=utf-8" });
+          navigator.sendBeacon(SCRIPT_URL, blob);
+          return;
+        } catch (e) {}
+      }
+
+      fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: payload,
+        keepalive: true
+      }).catch(() => {});
+    }
+
+    function onStudentLeaveViewport() {
+      if (state.role !== "student" || !state.roomId) return;
+      if (state.isAway) return;
+      state.isAway = true;
+      state.awayStartMs = Date.now();
+      state.monitor.tabLeaves += 1;
+      saveLocalMonitor();
+      syncMonitorToServer(true);
+    }
+
+    function onStudentReturnViewport() {
+      if (state.role !== "student" || !state.roomId) return;
+      if (!state.isAway) return;
+      const elapsedSec = Math.max(1, Math.round((Date.now() - state.awayStartMs) / 1000));
+      state.isAway = false;
+      state.monitor.awaySeconds += elapsedSec;
+      state.lastReturnFromAwayMs = Date.now();
+      saveLocalMonitor();
+      syncMonitorToServer(false);
+
+      const strictEnabled = state.roomData ? (state.roomData.strictMode !== false) : true;
+      if (strictEnabled) {
+        showToast(
+          `⚠️ Cảnh báo: Bạn vừa rời khỏi phòng thảo luận (${elapsedSec} giây). Hệ thống đã ghi nhận lần rời thứ ${state.monitor.tabLeaves}!`,
+          "error"
+        );
+      }
+    }
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        onStudentLeaveViewport();
+      } else {
+        onStudentReturnViewport();
+      }
+    });
+
+    window.addEventListener("blur", () => {
+      onStudentLeaveViewport();
+    });
+
+    window.addEventListener("focus", () => {
+      onStudentReturnViewport();
+    });
+
+    window.addEventListener("beforeunload", () => {
+      if (state.role === "student" && state.roomId) {
+        if (state.isAway) {
+          const elapsedSec = Math.max(1, Math.round((Date.now() - state.awayStartMs) / 1000));
+          state.monitor.awaySeconds += elapsedSec;
+          state.isAway = false;
+          saveLocalMonitor();
+        }
+        syncMonitorToServer(true);
+      }
+    });
+
+    // Bắt sự kiện dán văn bản (onpaste) trong khung soạn thảo
+    window.handleComposerPaste = (e) => {
+      if (state.role !== "student" || !state.roomId) return;
+      const pasted = (e.clipboardData || window.clipboardData)?.getData("text") || "";
+      const cleanLen = pasted.trim().length;
+      if (cleanLen <= 0) return;
+
+      state.lastPasteEventMs = Date.now();
+      state.monitor.pasteCount += 1;
+      state.monitor.pastedChars += cleanLen;
+
+      const justReturnedFromOtherTab = (Date.now() - state.lastReturnFromAwayMs) <= 20000;
+      const isSuspicious =
+        cleanLen >= 45 ||
+        (justReturnedFromOtherTab && cleanLen >= 20) ||
+        state.monitor.pastedChars >= 80;
+
+      if (isSuspicious) {
+        state.monitor.suspiciousPaste = true;
+      }
+
+      saveLocalMonitor();
+      syncMonitorToServer(false);
+
+      const strictEnabled = state.roomData ? (state.roomData.strictMode !== false) : true;
+      if (strictEnabled && isSuspicious) {
+        showToast(
+          `🚨 Phát hiện dán ${cleanLen} ký tự từ bên ngoài! Nội dung này đã được gắn cờ để giáo viên đối chiếu.`,
+          "error"
+        );
+      }
+    };
+
+    // =========================================================================
+    // CHUYỂN ĐỔI GIỮA 2 THẺ: THẢO LUẬN & THEO DÕI TIẾN ĐỘ
+    // =========================================================================
+    window.switchMainTab = (tabName) => {
+      state.activeMainTab = tabName;
+      const btnDisc = document.getElementById("main-tab-discussion");
+      const btnProg = document.getElementById("main-tab-progress");
+      const badgeDisc = document.getElementById("badge-tab-discussion");
+      const badgeProg = document.getElementById("badge-tab-progress");
+      const panelDisc = document.getElementById("panel-discussion");
+      const panelProg = document.getElementById("panel-progress");
+
+      if (tabName === "discussion") {
+        btnDisc.className = "flex items-center justify-center gap-2 py-2 px-3 rounded-xl font-bold text-sm transition-all bg-indigo-600 text-white shadow-sm";
+        badgeDisc.className = "px-2 py-0.5 text-xs rounded-full bg-white/20 text-white font-semibold";
+
+        btnProg.className = "flex items-center justify-center gap-2 py-2 px-3 rounded-xl font-bold text-sm transition-all text-slate-600 hover:bg-slate-50 hover:text-slate-900";
+        badgeProg.className = "px-2 py-0.5 text-xs rounded-full bg-slate-100 text-slate-600 font-semibold";
+
+        panelDisc.classList.remove("hidden");
+        panelProg.classList.add("hidden");
+      } else {
+        btnProg.className = "flex items-center justify-center gap-2 py-2 px-3 rounded-xl font-bold text-sm transition-all bg-indigo-600 text-white shadow-sm";
+        badgeProg.className = "px-2 py-0.5 text-xs rounded-full bg-white/20 text-white font-semibold";
+
+        btnDisc.className = "flex items-center justify-center gap-2 py-2 px-3 rounded-xl font-bold text-sm transition-all text-slate-600 hover:bg-slate-50 hover:text-slate-900";
+        badgeDisc.className = "px-2 py-0.5 text-xs rounded-full bg-slate-100 text-slate-600 font-semibold";
+
+        panelProg.classList.remove("hidden");
+        panelDisc.classList.add("hidden");
+        renderPerGroupProgress();
+      }
+      lucide.createIcons();
+    };
+
+    function getLiveComposerLength() {
+      if (state.role !== "student") return 0;
+      const t = (document.getElementById("post-title")?.value || "").trim().length;
+      const c = (document.getElementById("post-content")?.value || "").trim().length;
+      const code = state.codeDrawerOpen ? (document.getElementById("post-code")?.value || "").trim().length : 0;
+      return t + c + code;
+    }
+
+    window.handleComposerFocus = () => {
+      state.composerFocused = true;
+      state.lastTypingAt = Date.now();
+    };
+
+    window.handleComposerBlur = () => {
+      setTimeout(() => {
+        const activeEl = document.activeElement;
+        const inComposer = activeEl && (
+          activeEl.id === "post-title" ||
+          activeEl.id === "post-content" ||
+          activeEl.id === "post-code"
+        );
+        state.composerFocused = Boolean(inComposer);
+      }, 120);
+    };
+
+    window.handleLiveTyping = () => {
+      const liveLen = getLiveComposerLength();
+      const counterEl = document.getElementById("composer-char-counter");
+      if (counterEl) {
+        counterEl.textContent = `${liveLen} ký tự`;
+      }
+
+      // Phát hiện chèn đột ngột >= 60 ký tự trong < 1.5s mà không qua sự kiện paste chuẩn
+      if (state.role === "student" && state.roomId) {
+        const delta = liveLen - state.prevLiveLen;
+        const now = Date.now();
+        if (delta >= 60 && (now - state.lastTypingAt) < 1500 && (now - state.lastPasteEventMs) > 1500) {
+          state.monitor.pasteCount += 1;
+          state.monitor.pastedChars += delta;
+          state.monitor.suspiciousPaste = true;
+          saveLocalMonitor();
+          syncMonitorToServer(false);
+        }
+        state.prevLiveLen = liveLen;
+        state.lastTypingAt = now;
+      }
+
+      renderPerGroupProgress();
+    };
+
+    async function callSheetApi(payload) {
+      const res = await fetch(SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      });
+      return await res.json();
+    }
+
+    async function fetchBoardData() {
+      if (!state.roomId) return;
+      try {
+        const queryParams = new URLSearchParams({
+          action: "getBoard",
+          roomId: state.roomId,
+          role: state.role,
+          groupKey: state.groupKey || "",
+          authorId: state.groupKey || "",
+          groupName: state.groupName || "",
+          memberName: state.memberName || "",
+          memberId: myMemberId,
+          tabLeaves: String(state.monitor.tabLeaves || 0),
+          awaySeconds: String(state.monitor.awaySeconds || 0),
+          pasteCount: String(state.monitor.pasteCount || 0),
+          pastedChars: String(state.monitor.pastedChars || 0),
+          suspiciousPaste: state.monitor.suspiciousPaste ? "1" : "0",
+          pin: state.teacherPin || "",
+          _t: String(Date.now())
+        });
+        const res = await fetch(`${SCRIPT_URL}?${queryParams.toString()}`);
+        const data = await res.json();
+        if (data.ok) {
+          state.roomData = data.room;
+          state.posts = data.posts || [];
+          state.progressData = data.progress || null;
+          document.getElementById("board-room-title").textContent = state.roomData.title || state.roomId;
+          updateVisibilityUI();
+          renderPerGroupProgress();
+          renderPosts();
+        }
+      } catch (err) {
+        console.error("Lỗi đồng bộ:", err);
+      }
+    }
+
+    // =========================================================================
+    // RENDER THANH TIẾN ĐỘ RIÊNG CHO TỪNG NHÓM (MÀU THEO MÀU THẺ ĐÃ CHỌN)
+    // =========================================================================
+    function renderPerGroupProgress() {
+      const prog = state.progressData;
+      const isPublic = state.roomData?.isPublic === true;
+      const targetGroups = Math.max(1, state.roomData?.totalGroups || prog?.totalGroups || 4);
+      const editId = document.getElementById("edit-post-id")?.value || "";
+      const liveComposerLen = getLiveComposerLength();
+      const liveComposerColor = document.getElementById("post-color")?.value || getDefaultColorForGroup(state.groupName);
+      const myNormGroup = state.groupName ? normalizeVi(state.groupName) : "";
+
+      const groupMap = new Map();
+
+      if (prog && Array.isArray(prog.groups)) {
+        prog.groups.forEach(g => {
+          const norm = normalizeVi(g.groupName);
+          if (!norm) return;
+          const validColor = (g.cardColor && CARD_THEMES[g.cardColor]) ? g.cardColor : getDefaultColorForGroup(g.groupName);
+          const hasSub = g.hasSubmitted !== undefined ? Boolean(g.hasSubmitted) : true;
+          groupMap.set(norm, {
+            normKey: norm,
+            groupName: g.groupName,
+            cardColor: validColor,
+            hasExplicitColor: Boolean(g.cardColor && CARD_THEMES[g.cardColor]),
+            charLength: 0,
+            wordCount: 0,
+            postCount: 0,
+            hasCode: false,
+            hasSubmittedOnServer: hasSub,
+            contentHiddenByLock: (state.role === "student" && !isPublic && norm !== myNormGroup && hasSub),
+            monitor: g.monitor || null
+          });
+        });
+      }
+
+      state.posts.forEach(post => {
+        const norm = normalizeVi(post.groupName);
+        if (!norm) return;
+
+        const postValidColor = (post.cardColor && CARD_THEMES[post.cardColor]) ? post.cardColor : null;
+
+        if (!groupMap.has(norm)) {
+          groupMap.set(norm, {
+            normKey: norm,
+            groupName: post.groupName,
+            cardColor: postValidColor || getDefaultColorForGroup(post.groupName),
+            hasExplicitColor: Boolean(postValidColor),
+            charLength: 0,
+            wordCount: 0,
+            postCount: 0,
+            hasCode: false,
+            hasSubmittedOnServer: true,
+            contentHiddenByLock: false,
+            monitor: post.monitor || null
+          });
+        }
+
+        const entry = groupMap.get(norm);
+        entry.groupName = post.groupName || entry.groupName;
+        entry.contentHiddenByLock = false;
+        entry.hasSubmittedOnServer = true;
+        if (!entry.monitor && post.monitor) entry.monitor = post.monitor;
+
+        if (!entry.hasExplicitColor && postValidColor) {
+          entry.cardColor = postValidColor;
+          entry.hasExplicitColor = true;
+        }
+
+        entry.postCount += 1;
+
+        const titleStr = (post.title || "").trim();
+        const contentStr = (post.content || "").trim();
+        const codeStr = (post.code || "").trim();
+
+        let postChars = titleStr.length + contentStr.length + codeStr.length;
+        let combinedText = `${titleStr} ${contentStr} ${codeStr}`.trim();
+
+        if (state.role === "student" && editId && post.id === editId) {
+          postChars = liveComposerLen;
+          entry.cardColor = (liveComposerColor && CARD_THEMES[liveComposerColor]) ? liveComposerColor : entry.cardColor;
+          const liveT = (document.getElementById("post-title")?.value || "").trim();
+          const liveC = (document.getElementById("post-content")?.value || "").trim();
+          const liveCode = state.codeDrawerOpen ? (document.getElementById("post-code")?.value || "").trim() : "";
+          combinedText = `${liveT} ${liveC} ${liveCode}`.trim();
+          if (liveCode.length > 0) entry.hasCode = true;
+        } else if (codeStr.length > 0) {
+          entry.hasCode = true;
+        }
+
+        entry.charLength += postChars;
+        entry.wordCount += combinedText ? combinedText.split(/\s+/).length : 0;
+      });
+
+      if (state.role === "student" && myNormGroup) {
+        const chosenColor = (liveComposerColor && CARD_THEMES[liveComposerColor])
+          ? liveComposerColor
+          : getDefaultColorForGroup(state.groupName);
+
+        if (!groupMap.has(myNormGroup)) {
+          groupMap.set(myNormGroup, {
+            normKey: myNormGroup,
+            groupName: state.groupName,
+            cardColor: chosenColor,
+            hasExplicitColor: true,
+            charLength: 0,
+            wordCount: 0,
+            postCount: 0,
+            hasCode: false,
+            hasSubmittedOnServer: false,
+            contentHiddenByLock: false,
+            monitor: null
+          });
+        }
+
+        const myEntry = groupMap.get(myNormGroup);
+        if (!editId) {
+          if (myEntry.postCount === 0 || liveComposerLen > 0) {
+            myEntry.cardColor = chosenColor;
+          }
+          if (liveComposerLen > 0) {
+            myEntry.charLength += liveComposerLen;
+            const liveT = (document.getElementById("post-title")?.value || "").trim();
+            const liveC = (document.getElementById("post-content")?.value || "").trim();
+            const liveCode = state.codeDrawerOpen ? (document.getElementById("post-code")?.value || "").trim() : "";
+            const liveCombined = `${liveT} ${liveC} ${liveCode}`.trim();
+            myEntry.wordCount += liveCombined ? liveCombined.split(/\s+/).length : 0;
+            if (liveCode.length > 0) myEntry.hasCode = true;
+          }
+        }
+      }
+
+      for (let i = 1; i <= targetGroups; i++) {
+        const defaultName = `Nhóm ${i}`;
+        const norm = normalizeVi(defaultName);
+        if (!groupMap.has(norm)) {
+          groupMap.set(norm, {
+            normKey: norm,
+            groupName: defaultName,
+            cardColor: getDefaultColorForGroup(defaultName),
+            hasExplicitColor: false,
+            charLength: 0,
+            wordCount: 0,
+            postCount: 0,
+            hasCode: false,
+            hasSubmittedOnServer: false,
+            contentHiddenByLock: false,
+            monitor: null
+          });
+        }
+      }
+
+      const allGroups = Array.from(groupMap.values()).sort((a, b) =>
+        a.groupName.localeCompare(b.groupName, "vi", { numeric: true })
+      );
+
+      const submittedGroupsCount = allGroups.filter(g => g.hasSubmittedOnServer || g.postCount > 0).length;
+      const totalDisplayGroups = Math.max(targetGroups, allGroups.length);
+      const pctGroups = totalDisplayGroups > 0 ? Math.min(100, Math.round((submittedGroupsCount / totalDisplayGroups) * 100)) : 0;
+      const joinedTotal = prog?.totalJoinedMembers ?? 0;
+
+      document.getElementById("progress-groups-stat").textContent = `${submittedGroupsCount}/${totalDisplayGroups} nhóm đã nộp (${pctGroups}%)`;
+      document.getElementById("badge-tab-progress").textContent = `${submittedGroupsCount}/${totalDisplayGroups} nhóm`;
+      document.getElementById("target-groups-val").textContent = targetGroups;
+
+      document.getElementById("progress-subtitle").textContent =
+        joinedTotal > 0
+          ? `Có ${joinedTotal} thành viên đã vào phòng • Màu thanh tiến độ khớp với màu thẻ từng nhóm đã chọn`
+          : `Màu thanh tiến độ khớp với màu thẻ từng nhóm đã chọn và co giãn theo độ dài nội dung`;
+
+      const maxCharsInClass = allGroups.reduce((mx, g) => Math.max(mx, g.charLength), 0);
+      const scaleCeiling = Math.max(500, maxCharsInClass);
+
+      const listContainer = document.getElementById("per-group-progress-list");
+      listContainer.innerHTML = allGroups.map((grp) => {
+        const theme = resolveTheme(grp.cardColor);
+        const isMyGroup = state.role === "student" && grp.normKey === myNormGroup;
+        const isActive = grp.hasSubmittedOnServer || grp.postCount > 0 || grp.charLength > 0;
+
+        let widthPercent = 0;
+        let lengthLabel = "";
+        let statusTag = "";
+        let barGradient = theme.bar;
+        let dotClass = isActive ? theme.indicator : "bg-slate-300";
+        let containerClass = isActive ? theme.rowBg : "border-slate-200/90 bg-slate-50/40";
+
+        if (grp.contentHiddenByLock) {
+          widthPercent = 35;
+          lengthLabel = "Đã nộp bài (Đang ẩn chi tiết khi khóa phòng)";
+          barGradient = "from-amber-400 to-amber-500";
+          dotClass = "bg-amber-500";
+          containerClass = "border-amber-200/80 bg-amber-50/30";
+          statusTag = `<span class="px-2 py-0.5 text-[11px] font-semibold rounded-md bg-amber-50 text-amber-700 border border-amber-200">🔒 Đã nộp</span>`;
+        } else if (!isActive) {
+          widthPercent = 0;
+          lengthLabel = "0 ký tự (Chưa bắt đầu)";
+          statusTag = `<span class="px-2 py-0.5 text-[11px] font-medium rounded-md bg-slate-100 text-slate-500">Chưa nộp</span>`;
+        } else {
+          const rawPct = Math.round((grp.charLength / scaleCeiling) * 100);
+          widthPercent = grp.charLength > 0 ? Math.max(4, Math.min(100, rawPct)) : 0;
+          lengthLabel = `${grp.charLength.toLocaleString("vi-VN")} ký tự (${grp.wordCount.toLocaleString("vi-VN")} từ)`;
+          statusTag = `<span class="px-2 py-0.5 text-[11px] font-semibold rounded-md ${theme.badge} border">${grp.postCount > 0 ? `${grp.postCount} thẻ • ${theme.label}` : `Đang soạn • ${theme.label}`}</span>`;
+        }
+
+        // Nhãn giám sát dành riêng cho Giáo viên trên thanh tiến độ
+        let teacherAlertBadges = "";
+        if (state.role === "teacher" && grp.monitor) {
+          const m = grp.monitor;
+          if (m.tabLeaves > 0) {
+            teacherAlertBadges += `<span class="px-2 py-0.5 text-[10px] font-semibold rounded-md bg-amber-100 text-amber-900 border border-amber-300">⚠️ Rời tab: ${m.tabLeaves} lần (${m.awaySeconds}s)</span>`;
+          }
+          if (m.suspiciousPaste || m.pastedChars >= 45) {
+            teacherAlertBadges += `<span class="px-2 py-0.5 text-[10px] font-semibold rounded-md bg-rose-100 text-rose-800 border border-rose-300">🚨 Dán: ${m.pastedChars} ký tự</span>`;
+          }
+        }
+
+        return `
+          <div class="px-3.5 py-2 rounded-xl border ${containerClass} ${isMyGroup ? 'ring-2 ring-indigo-300/70' : ''} transition-all">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="w-2.5 h-2.5 rounded-full ${dotClass} shrink-0"></span>
+                <span class="font-bold text-slate-900 text-sm">${escapeHtml(grp.groupName)}</span>
+                ${isMyGroup ? `<span class="px-2 py-0.5 text-[10px] font-bold bg-indigo-600 text-white rounded-md">Nhóm bạn</span>` : ""}
+                ${statusTag}
+                ${grp.hasCode ? `<span class="px-2 py-0.5 text-[10px] font-semibold bg-slate-200/80 text-slate-700 rounded-md">+ Code Python</span>` : ""}
+                ${teacherAlertBadges}
+              </div>
+
+              <div class="flex items-center gap-3 text-xs">
+                <span class="font-bold text-slate-800">${lengthLabel}</span>
+              </div>
+            </div>
+
+            <!-- Thanh tiến độ riêng của nhóm -->
+            <div class="w-full h-2.5 bg-white/90 border border-slate-200/80 rounded-full overflow-hidden">
+              <div style="width: ${widthPercent}%"
+                class="h-full rounded-full bg-gradient-to-r ${isActive ? barGradient : 'from-slate-300 to-slate-300'} transition-all duration-500 ease-out">
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      lucide.createIcons();
+    }
+
+    window.changeTotalGroups = async (delta) => {
+      if (state.role !== "teacher" || !state.roomData) return;
+      const current = state.roomData.totalGroups || 4;
+      const nextVal = Math.max(1, Math.min(50, current + delta));
+      state.roomData.totalGroups = nextVal;
+      if (state.progressData) state.progressData.totalGroups = nextVal;
+      renderPerGroupProgress();
+
+      try {
+        await callSheetApi({
+          action: "updateTotalGroups",
+          roomId: state.roomId,
+          pin: state.teacherPin,
+          totalGroups: nextVal
+        });
+      } catch (err) {
+        showToast("Không thể cập nhật tổng số nhóm!", "error");
+      }
+    };
+
+    window.selectCardColor = (colorKey) => {
+      const safeKey = (colorKey && CARD_THEMES[colorKey]) ? colorKey : getDefaultColorForGroup(state.groupName);
+      document.getElementById("post-color").value = safeKey;
+      document.querySelectorAll(".color-dot").forEach(btn => {
+        const key = btn.getAttribute("data-color");
+        const theme = resolveTheme(key);
+        if (key === safeKey) {
+          btn.className = `color-dot w-5 h-5 rounded-full ${theme.dotActive} transition`;
+        } else {
+          btn.className = `color-dot w-5 h-5 rounded-full ${theme.dotBase} border hover:scale-110 transition`;
+        }
+      });
+      renderPerGroupProgress();
+    };
+
+    window.toggleCodeDrawer = (forceState = null) => {
+      state.codeDrawerOpen = forceState !== null ? forceState : !state.codeDrawerOpen;
+      const drawer = document.getElementById("code-drawer");
+      const btnText = document.getElementById("btn-toggle-code-text");
+      if (state.codeDrawerOpen) {
+        drawer.classList.remove("hidden");
+        btnText.textContent = "Ẩn khung Code Python";
+      } else {
+        drawer.classList.add("hidden");
+        btnText.textContent = "Đính kèm Code Python";
+      }
+      handleLiveTyping();
+    };
+
+    window.switchRole = (role) => {
+      state.role = role;
+      const tabStu = document.getElementById("tab-student");
+      const tabTch = document.getElementById("tab-teacher");
+      const formStu = document.getElementById("form-student");
+      const formTch = document.getElementById("form-teacher");
+
+      if (role === "student") {
+        tabStu.className = "flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-lg bg-white text-indigo-600 shadow-sm transition";
+        tabTch.className = "flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition";
+        formStu.classList.remove("hidden");
+        formTch.classList.add("hidden");
+      } else {
+        tabTch.className = "flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-lg bg-white text-slate-900 shadow-sm transition";
+        tabStu.className = "flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-lg text-slate-600 hover:text-slate-900 transition";
+        formTch.classList.remove("hidden");
+        formStu.classList.add("hidden");
+      }
+    };
+
+    window.handleStudentJoin = async (e) => {
+      e.preventDefault();
+      if (!isConfigured) return showToast("Vui lòng dán link SCRIPT_URL trước!", "error");
+
+      const roomId = document.getElementById("stu-room-id").value.trim().toUpperCase();
+      const groupName = document.getElementById("stu-group-name").value.trim();
+      const memberName = document.getElementById("stu-member-name").value.trim();
+      if (!roomId || !groupName) return;
+
+      const btn = document.getElementById("btn-stu-join");
+      btn.disabled = true;
+      btn.innerHTML = `<span>Đang kiểm tra phòng...</span>`;
+
+      try {
+        const res = await callSheetApi({
+          action: "studentJoin",
+          roomId,
+          groupName,
+          memberId: myMemberId,
+          memberName: memberName || groupName
+        });
+        if (!res.ok) {
+          showToast(res.error || "Không tìm thấy phòng!", "error");
+          return;
+        }
+        state.role = "student";
+        state.roomId = roomId;
+        state.groupName = groupName;
+        state.memberName = memberName || groupName;
+        state.groupKey = getNormalizedGroupKey(roomId, groupName);
+        state.teacherPin = "";
+        state.composerFocused = false;
+        state.lastTypingAt = 0;
+        state.isAway = false;
+        state.monitor = { tabLeaves: 0, awaySeconds: 0, pasteCount: 0, pastedChars: 0, suspiciousPaste: false };
+        loadLocalMonitor();
+        await enterBoard();
+      } catch (err) {
+        showToast("Lỗi kết nối Google Sheets. Hãy kiểm tra quyền truy cập 'Bất kỳ ai'!", "error");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<span>Vào bảng thảo luận</span><i data-lucide="arrow-right" class="w-4 h-4"></i>`;
+        lucide.createIcons();
+      }
+    };
+
+    window.handleTeacherJoin = async (e) => {
+      e.preventDefault();
+      if (!isConfigured) return showToast("Vui lòng dán link SCRIPT_URL trước!", "error");
+
+      const roomId = document.getElementById("tch-room-id").value.trim().toUpperCase();
+      const title = document.getElementById("tch-room-title").value.trim();
+      const pin = document.getElementById("tch-pin").value.trim();
+      if (!roomId || !pin) return;
+
+      const btn = document.getElementById("btn-tch-join");
+      btn.disabled = true;
+      btn.innerHTML = `<span>Đang kết nối Google Sheets...</span>`;
+
+      try {
+        const res = await callSheetApi({ action: "teacherJoin", roomId, title, pin });
+        if (!res.ok) {
+          showToast(res.error || "Không thể mở phòng!", "error");
+          return;
+        }
+        showToast(res.created ? `Đã tạo phòng "${roomId}" trên Google Sheets!` : `Đã vào phòng "${roomId}"!`, "success");
+        state.role = "teacher";
+        state.roomId = roomId;
+        state.teacherPin = pin;
+        state.groupKey = "";
+        state.composerFocused = false;
+        state.lastTypingAt = 0;
+        await enterBoard();
+      } catch (err) {
+        showToast("Lỗi kết nối Google Sheets. Hãy kiểm tra lại link Web App!", "error");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i data-lucide="key-round" class="w-4 h-4"></i><span>Mở bảng điều khiển Giáo viên</span>`;
+        lucide.createIcons();
+      }
+    };
+
+    async function enterBoard() {
+      document.getElementById("screen-lobby").classList.add("hidden");
+      document.getElementById("screen-board").classList.remove("hidden");
+      document.getElementById("board-room-badge").textContent = state.roomId;
+
+      if (state.role === "teacher") {
+        document.getElementById("board-role-label").textContent = "Giáo viên quản trị";
+        document.getElementById("teacher-controls").classList.remove("hidden");
+        document.getElementById("teacher-group-target").classList.remove("hidden");
+        document.getElementById("teacher-group-target").classList.add("inline-flex");
+        document.getElementById("student-status-pill").classList.add("hidden");
+        document.getElementById("student-banner").classList.add("hidden");
+        document.getElementById("student-composer").classList.add("hidden");
+      } else {
+        const displayLabel = state.memberName && state.memberName !== state.groupName
+          ? `Nhóm: ${state.groupName} (${state.memberName})`
+          : `Nhóm: ${state.groupName}`;
+        document.getElementById("board-role-label").textContent = displayLabel;
+        document.getElementById("teacher-controls").classList.add("hidden");
+        document.getElementById("teacher-group-target").classList.add("hidden");
+        document.getElementById("teacher-group-target").classList.remove("inline-flex");
+        document.getElementById("student-status-pill").classList.remove("hidden");
+        document.getElementById("student-banner").classList.remove("hidden");
+        document.getElementById("student-composer").classList.remove("hidden");
+        selectCardColor(getDefaultColorForGroup(state.groupName));
+        updateStudentSelfMonitorUI();
+      }
+
+      switchMainTab("discussion");
+      await fetchBoardData();
+      if (state.pollTimer) clearInterval(state.pollTimer);
+      state.pollTimer = setInterval(fetchBoardData, 3500);
+      lucide.createIcons();
+    }
+
+    function updateVisibilityUI() {
+      if (!state.roomData) return;
+      const isPublic = state.roomData.isPublic === true;
+      const strictMode = state.roomData.strictMode !== false;
+
+      if (state.role === "teacher") {
+        const btn = document.getElementById("btn-toggle-public");
+        const icon = document.getElementById("toggle-status-icon");
+        const text = document.getElementById("toggle-status-text");
+
+        if (isPublic) {
+          btn.className = "flex items-center gap-2 px-3.5 py-1.5 rounded-xl font-semibold text-sm border-2 border-emerald-500 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-all shadow-sm";
+          icon.textContent = "🔓";
+          text.textContent = "Đang công khai toàn lớp";
+        } else {
+          btn.className = "flex items-center gap-2 px-3.5 py-1.5 rounded-xl font-semibold text-sm border-2 border-amber-400 bg-amber-50 text-amber-800 hover:bg-amber-100 transition-all shadow-sm";
+          icon.textContent = "🔒";
+          text.textContent = "Đang ẩn bài các nhóm";
+        }
+
+        const strictBtn = document.getElementById("btn-toggle-strict");
+        const strictText = document.getElementById("strict-status-text");
+        if (strictMode) {
+          strictBtn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold text-xs border transition-all bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100";
+          strictText.textContent = "Giám sát: Bật";
+        } else {
+          strictBtn.className = "flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold text-xs border transition-all bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200";
+          strictText.textContent = "Giám sát: Tắt";
+        }
+      } else {
+        const pill = document.getElementById("student-status-pill");
+        const banner = document.getElementById("student-banner");
+        const bannerContent = document.getElementById("student-banner-content");
+        const strictTag = strictMode
+          ? `<span class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-700 bg-white/80 px-2.5 py-0.5 rounded-full border border-indigo-200/80"><i data-lucide="shield-alert" class="w-3.5 h-3.5"></i> Đang bật giám sát chuyển tab & dán bài</span>`
+          : "";
+
+        if (isPublic) {
+          pill.className = "px-3 py-1 rounded-full text-xs font-semibold border border-emerald-200 bg-emerald-50 text-emerald-700 flex items-center gap-1.5";
+          pill.innerHTML = `<span>🔓 Đang mở toàn lớp</span>`;
+
+          banner.className = "border-b border-emerald-200 bg-emerald-50/80 px-4 py-2 text-sm text-emerald-800";
+          bannerContent.innerHTML = `<div class="flex items-center gap-2"><i data-lucide="heart" class="w-4 h-4 text-rose-500 shrink-0"></i><span><strong>Đã mở công khai:</strong> Bạn có thể xem bài làm và bấm <strong>Thả tim</strong> cho các thẻ bài hữu ích của nhóm bạn!</span></div>${strictTag}`;
+        } else {
+          pill.className = "px-3 py-1 rounded-full text-xs font-semibold border border-amber-200 bg-amber-50 text-amber-800 flex items-center gap-1.5";
+          pill.innerHTML = `<span>🔒 Làm việc độc lập</span>`;
+
+          banner.className = "border-b border-amber-200 bg-amber-50/80 px-4 py-2 text-sm text-amber-900";
+          bannerContent.innerHTML = `<div class="flex items-center gap-2"><i data-lucide="lock" class="w-4 h-4 text-amber-600 shrink-0"></i><span>Giáo viên đang bật chế độ làm việc độc lập. Các thành viên trong nhóm bấm nút <strong>Sửa bài</strong> trên thẻ của nhóm mình để cùng biên tập.</span></div>${strictTag}`;
+        }
+        lucide.createIcons();
+      }
+    }
+
+    window.toggleRoomPublic = async () => {
+      if (state.role !== "teacher" || !state.roomData) return;
+      const nextState = !(state.roomData.isPublic === true);
+      state.roomData.isPublic = nextState;
+      updateVisibilityUI();
+      renderPerGroupProgress();
+      renderPosts();
+
+      try {
+        const res = await callSheetApi({
+          action: "togglePublic",
+          roomId: state.roomId,
+          pin: state.teacherPin,
+          isPublic: nextState
+        });
+        if (!res.ok) {
+          showToast(res.error || "Lỗi cập nhật trạng thái!", "error");
+          return;
+        }
+        showToast(nextState ? "Đã mở công khai! Cả lớp có thể xem và thả tim bài làm." : "Đã khóa ẩn bài các nhóm!", "success");
+      } catch (err) {
+        showToast("Lỗi cập nhật trạng thái!", "error");
+      }
+    };
+
+    window.toggleStrictMode = async () => {
+      if (state.role !== "teacher" || !state.roomData) return;
+      const nextStrict = !(state.roomData.strictMode !== false);
+      state.roomData.strictMode = nextStrict;
+      updateVisibilityUI();
+
+      try {
+        const res = await callSheetApi({
+          action: "toggleStrictMode",
+          roomId: state.roomId,
+          pin: state.teacherPin,
+          strictMode: nextStrict
+        });
+        if (!res.ok) {
+          showToast(res.error || "Lỗi cập nhật chế độ giám sát!", "error");
+          return;
+        }
+        showToast(
+          nextStrict
+            ? "Đã bật cảnh báo trực tiếp khi học sinh rời tab hoặc dán văn bản!"
+            : "Đã tắt cảnh báo trên màn hình học sinh (hệ thống vẫn ghi nhận cho giáo viên).",
+          "info"
+        );
+      } catch (err) {
+        showToast("Lỗi cập nhật chế độ giám sát!", "error");
+      }
+    };
+
+    window.toggleLikePost = async (postId) => {
+      const isPublic = state.roomData?.isPublic === true;
+      if (!isPublic) {
+        showToast("Chỉ có thể thả tim khi giáo viên mở chế độ công khai!", "info");
+        return;
+      }
+
+      const post = state.posts.find(p => p.id === postId);
+      if (!post || checkIsMine(post)) return;
+
+      const prevLiked = Boolean(post.isLikedByMe);
+      const prevCount = post.likeCount || 0;
+      post.isLikedByMe = !prevLiked;
+      post.likeCount = prevLiked ? Math.max(0, prevCount - 1) : prevCount + 1;
+      renderPosts();
+
+      try {
+        const res = await callSheetApi({
+          action: "toggleLike",
+          id: postId,
+          memberId: myMemberId,
+          groupKey: state.groupKey || "",
+          groupName: state.groupName || ""
+        });
+        if (!res.ok) {
+          post.isLikedByMe = prevLiked;
+          post.likeCount = prevCount;
+          renderPosts();
+          showToast(res.error || "Không thể thả tim!", "error");
+        } else {
+          post.isLikedByMe = res.liked;
+          post.likeCount = res.likeCount;
+          renderPosts();
+        }
+      } catch (err) {
+        post.isLikedByMe = prevLiked;
+        post.likeCount = prevCount;
+        renderPosts();
+        showToast("Lỗi kết nối khi thả tim!", "error");
+      }
+    };
+
+    window.handlePostSubmit = async (e) => {
+      e.preventDefault();
+      const title = document.getElementById("post-title").value.trim();
+      const content = document.getElementById("post-content").value.trim();
+      const code = state.codeDrawerOpen ? document.getElementById("post-code").value.replace(/\s+$/, "") : "";
+      const rawColor = document.getElementById("post-color").value;
+      const cardColor = (rawColor && CARD_THEMES[rawColor]) ? rawColor : getDefaultColorForGroup(state.groupName);
+      const editId = document.getElementById("edit-post-id").value;
+
+      if (!title && !content && !code) {
+        showToast("Vui lòng nhập tiêu đề hoặc nội dung thảo luận trước khi đăng!", "error");
+        return;
+      }
+
+      const btn = document.getElementById("btn-submit-post");
+      const btnText = document.getElementById("btn-submit-post-text");
+      btn.disabled = true;
+      btnText.textContent = "Đang gửi...";
+
+      try {
+        let res;
+        if (editId) {
+          res = await callSheetApi({
+            action: "updatePost",
+            id: editId,
+            groupKey: state.groupKey,
+            authorId: state.groupKey,
+            memberId: myMemberId,
+            memberName: state.memberName,
+            groupName: state.groupName,
+            title,
+            content,
+            code,
+            cardColor,
+            monitor: state.monitor
+          });
+          if (!res.ok) {
+            showToast(res.error || "Không thể sửa bài!", "error");
+            return;
+          }
+          showToast("Đã cập nhật thẻ bài của nhóm!", "success");
+        } else {
+          res = await callSheetApi({
+            action: "createPost",
+            roomId: state.roomId,
+            groupName: state.groupName,
+            groupKey: state.groupKey,
+            authorId: state.groupKey,
+            memberId: myMemberId,
+            memberName: state.memberName,
+            title,
+            content,
+            code,
+            cardColor,
+            monitor: state.monitor
+          });
+          if (!res.ok) {
+            showToast(res.error || "Không thể đăng bài!", "error");
+            return;
+          }
+          if (res.id) rememberPostId(res.id);
+          showToast("Đã đăng thẻ thảo luận lên bảng!", "success");
+        }
+        state.composerFocused = false;
+        state.lastTypingAt = 0;
+        resetComposer();
+        await fetchBoardData();
+      } catch (err) {
+        showToast("Lỗi khi gửi bài lên Google Sheets!", "error");
+      } finally {
+        btn.disabled = false;
+        btnText.textContent = "Đăng thẻ bài";
+      }
+    };
+
+    function renderPosts() {
+      const grid = document.getElementById("posts-grid");
+      const emptyState = document.getElementById("empty-state");
+      const isPublic = state.roomData?.isPublic === true;
+
+      let visiblePosts = state.posts;
+      if (state.role === "student" && !isPublic) {
+        visiblePosts = state.posts.filter(p => checkIsMine(p));
+      }
+
+      document.getElementById("board-post-count").textContent = `${visiblePosts.length} thẻ bài`;
+      document.getElementById("badge-tab-discussion").textContent = `${visiblePosts.length}`;
+
+      visiblePosts = [...visiblePosts].sort((a, b) => {
+        if (a.isHighlighted === b.isHighlighted) return 0;
+        return a.isHighlighted ? -1 : 1;
+      });
+
+      if (visiblePosts.length === 0) {
+        grid.innerHTML = "";
+        emptyState.classList.remove("hidden");
+        document.getElementById("empty-state-sub").textContent =
+          state.role === "student" && !isPublic
+            ? "Nhóm bạn chưa đăng thẻ nào. Hãy nhập ý kiến thảo luận ở khung phía trên!"
+            : "Chưa có nhóm nào đăng thẻ bài lên bảng.";
+        return;
+      }
+
+      emptyState.classList.add("hidden");
+      grid.innerHTML = visiblePosts.map(post => {
+        const isMine = checkIsMine(post);
+        const isTeacher = state.role === "teacher";
+        const likeCount = post.likeCount || 0;
+        const isLiked = Boolean(post.isLikedByMe);
+        const editors = Array.isArray(post.editors) ? post.editors : [];
+        const editorCount = Math.max(1, editors.length);
+        const editorNamesTooltip = editors.map(ed => ed.name).filter(Boolean).join(", ");
+
+        let timeStr = "Vừa xong";
+        if (post.createdAt) {
+          const d = new Date(post.createdAt);
+          if (!isNaN(d.getTime())) {
+            timeStr = d.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
+          }
+        }
+
+        const resolvedColorKey = (post.cardColor && CARD_THEMES[post.cardColor])
+          ? post.cardColor
+          : getDefaultColorForGroup(post.groupName);
+        const themeClass = resolveTheme(resolvedColorKey).card;
+        const highlightCardClass = post.isHighlighted
+          ? "ring-2 ring-amber-400 bg-amber-50/90 border-amber-300 shadow-md"
+          : `${themeClass} shadow-sm`;
+
+        // Thanh thông tin giám sát chỉ hiển thị cho Giáo viên
+        let teacherMonitorHtml = "";
+        if (isTeacher && post.monitor) {
+          const m = post.monitor;
+          const hasLeaves = (m.tabLeaves || 0) > 0;
+          const hasPaste = Boolean(m.suspiciousPaste) || (m.pastedChars || 0) >= 45;
+
+          if (hasLeaves || hasPaste) {
+            const items = [];
+            if (hasLeaves) {
+              items.push(`<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 border border-amber-300 text-[11px] font-semibold">⚠️ Rời tab: ${m.tabLeaves} lần (${m.awaySeconds || 0}s)</span>`);
+            }
+            if (hasPaste) {
+              items.push(`<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-100 text-rose-800 border border-rose-300 text-[11px] font-semibold">🚨 Nghi vấn dán bài (${m.pastedChars || 0} ký tự)</span>`);
+            }
+            teacherMonitorHtml = `<div class="flex flex-wrap items-center gap-1.5 pt-1">${items.join("")}</div>`;
+          } else {
+            teacherMonitorHtml = `
+              <div class="pt-0.5">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-medium">✅ Không rời tab / dán bài</span>
+              </div>
+            `;
+          }
+        }
+
+        let heartButtonHtml = "";
+        if (!isPublic) {
+          heartButtonHtml = `
+            <span title="Giáo viên cần bật chế độ Công khai để thành viên khác thả tim"
+              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100/80 text-slate-400 border border-slate-200/80 select-none">
+              <i data-lucide="heart" class="w-3.5 h-3.5"></i>
+              <span>${likeCount}</span>
+            </span>
+          `;
+        } else if (isMine) {
+          heartButtonHtml = `
+            <span title="Số lượt thả tim từ các nhóm khác"
+              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50/70 text-rose-600 border border-rose-200/70 select-none">
+              <i data-lucide="heart" class="w-3.5 h-3.5 fill-rose-500 text-rose-500"></i>
+              <span>${likeCount}</span>
+            </span>
+          `;
+        } else {
+          heartButtonHtml = `
+            <button type="button" onclick="toggleLikePost('${post.id}')"
+              title="${isLiked ? 'Bỏ thả tim' : 'Thả tim nếu thấy nội dung hữu ích'}"
+              class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
+                isLiked
+                  ? 'bg-rose-50 border-rose-300 text-rose-600 shadow-sm animate-heart'
+                  : 'bg-white/90 hover:bg-rose-50 border-slate-200 hover:border-rose-200 text-slate-600 hover:text-rose-600'
+              }">
+              <i data-lucide="heart" class="w-3.5 h-3.5 ${isLiked ? 'fill-rose-500 text-rose-500' : ''}"></i>
+              <span>${likeCount > 0 ? likeCount : 'Thả tim'}</span>
+            </button>
+          `;
+        }
+
+        return `
+          <article class="rounded-2xl border ${highlightCardClass} p-5 transition-all flex flex-col gap-3">
+            <!-- Header thẻ -->
+            <div class="flex items-start justify-between gap-2 pb-2 border-b border-slate-200/70">
+              <div>
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="font-bold text-slate-800 text-xs uppercase tracking-wide">${escapeHtml(post.groupName)}</span>
+                  ${isMine ? `<span class="px-2 py-0.5 text-[10px] font-semibold bg-indigo-100/80 text-indigo-700 rounded-md">Nhóm bạn</span>` : ""}
+                  ${post.isHighlighted ? `<span class="px-2 py-0.5 text-[10px] font-semibold bg-amber-200/80 text-amber-900 rounded-md">⭐ Tiêu biểu</span>` : ""}
+                </div>
+                <span class="text-[11px] text-slate-400 block mt-0.5">${timeStr}</span>
+              </div>
+
+              <div class="flex items-center gap-1.5 shrink-0">
+                ${isTeacher ? `
+                  <button type="button" onclick="toggleHighlight('${post.id}', ${Boolean(post.isHighlighted)})"
+                    title="${post.isHighlighted ? 'Bỏ ghim nổi bật' : 'Ghim nổi bật thẻ này'}"
+                    class="p-1.5 rounded-lg ${post.isHighlighted ? 'bg-amber-200 text-amber-900' : 'text-slate-400 hover:bg-amber-100/70 hover:text-amber-700'} transition">
+                    <i data-lucide="star" class="w-4 h-4"></i>
+                  </button>
+                ` : ""}
+
+                ${isMine ? `
+                  <button type="button" onclick="startEditPost('${post.id}')" title="Chỉnh sửa tiếp bài của nhóm"
+                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold border border-indigo-200/80 transition">
+                    <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                    <span>Sửa bài</span>
+                  </button>
+                ` : ""}
+
+                ${(isTeacher || isMine) ? `
+                  <button type="button" onclick="deletePost('${post.id}')" title="Xóa thẻ"
+                    class="p-1.5 rounded-lg text-slate-400 hover:bg-rose-100/70 hover:text-rose-600 transition">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                  </button>
+                ` : ""}
+              </div>
+            </div>
+
+            ${post.title ? `
+              <h4 class="font-bold text-slate-900 text-base leading-snug">${escapeHtml(post.title)}</h4>
+            ` : ""}
+
+            ${post.content ? `
+              <div class="text-sm text-slate-700 whitespace-pre-line leading-relaxed break-words">${formatDiscussionText(post.content)}</div>
+            ` : ""}
+
+            ${post.code ? `
+              <div class="relative group mt-1">
+                <div class="flex items-center justify-between px-3 py-1.5 bg-slate-200/80 rounded-t-lg border border-b-0 border-slate-300/80 text-[11px] font-semibold text-slate-600">
+                  <span>Python</span>
+                  <button type="button" onclick="copyCodeText('${post.id}')"
+                    class="flex items-center gap-1 text-slate-600 hover:text-indigo-600 transition">
+                    <i data-lucide="copy" class="w-3 h-3"></i> Copy code
+                  </button>
+                </div>
+                <pre class="!m-0 !rounded-t-none border border-slate-300/80 overflow-x-auto"><code class="language-python">${escapeHtml(post.code)}</code></pre>
+              </div>
+            ` : ""}
+
+            ${teacherMonitorHtml}
+
+            <div class="pt-2.5 mt-auto border-t border-slate-200/60 flex items-center justify-between gap-2">
+              <span title="${editorNamesTooltip ? 'Thành viên tham gia: ' + escapeHtml(editorNamesTooltip) : ''}"
+                class="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
+                <i data-lucide="users" class="w-3.5 h-3.5 text-slate-400"></i>
+                <span>${editorCount} thành viên tham gia chỉnh sửa</span>
+              </span>
+
+              ${heartButtonHtml}
+            </div>
+          </article>
+        `;
+      }).join("");
+
+      lucide.createIcons();
+      document.querySelectorAll("pre code").forEach((block) => {
+        hljs.highlightElement(block);
+      });
+    }
+
+    window.toggleHighlight = async (postId, currentVal) => {
+      try {
+        const res = await callSheetApi({
+          action: "toggleHighlight",
+          id: postId,
+          pin: state.teacherPin,
+          isHighlighted: !currentVal
+        });
+        if (!res.ok) return showToast(res.error || "Lỗi thao tác!", "error");
+        await fetchBoardData();
+      } catch (err) {
+        showToast("Lỗi thao tác!", "error");
+      }
+    };
+
+    window.deletePost = async (postId) => {
+      if (!confirm("Bạn có chắc muốn xóa thẻ bài này không?")) return;
+      try {
+        const res = await callSheetApi({
+          action: "deletePost",
+          id: postId,
+          role: state.role,
+          groupKey: state.groupKey,
+          authorId: state.groupKey,
+          groupName: state.groupName,
+          pin: state.teacherPin
+        });
+        if (!res.ok) return showToast(res.error || "Không thể xóa bài!", "error");
+        showToast("Đã xóa thẻ bài!", "success");
+        await fetchBoardData();
+      } catch (err) {
+        showToast("Không thể xóa bài!", "error");
+      }
+    };
+
+    window.startEditPost = (postId) => {
+      const post = state.posts.find(p => p.id === postId && checkIsMine(p));
+      if (!post) return;
+      switchMainTab("discussion");
+      document.getElementById("edit-post-id").value = post.id;
+      document.getElementById("post-title").value = post.title || "";
+      document.getElementById("post-content").value = post.content || "";
+      document.getElementById("post-code").value = post.code || "";
+      const safeColor = (post.cardColor && CARD_THEMES[post.cardColor])
+        ? post.cardColor
+        : getDefaultColorForGroup(state.groupName);
+      selectCardColor(safeColor);
+      toggleCodeDrawer(Boolean(post.code));
+
+      document.getElementById("composer-heading").textContent = "Chỉnh sửa thẻ thảo luận của nhóm";
+      document.getElementById("btn-submit-post-text").textContent = "Lưu thay đổi";
+      document.getElementById("btn-cancel-edit").classList.remove("hidden");
+      state.composerFocused = true;
+      state.lastTypingAt = Date.now();
+      state.prevLiveLen = getLiveComposerLength();
+      handleLiveTyping();
+      document.getElementById("student-composer").scrollIntoView({ behavior: "smooth" });
+      document.getElementById("post-content").focus();
+    };
+
+    window.resetComposer = () => {
+      document.getElementById("edit-post-id").value = "";
+      document.getElementById("post-title").value = "";
+      document.getElementById("post-content").value = "";
+      document.getElementById("post-code").value = "";
+      selectCardColor(getDefaultColorForGroup(state.groupName));
+      toggleCodeDrawer(false);
+
+      document.getElementById("composer-heading").textContent = "Tạo thẻ thảo luận mới";
+      document.getElementById("btn-submit-post-text").textContent = "Đăng thẻ bài";
+      document.getElementById("btn-cancel-edit").classList.add("hidden");
+      state.composerFocused = false;
+      state.lastTypingAt = 0;
+      state.prevLiveLen = 0;
+      handleLiveTyping();
+    };
+
+    window.insertPythonTemplate = () => {
+      const box = document.getElementById("post-code");
+      if (!box.value.trim()) {
+        box.value = `a = float(input("Nhập số a: "))\nif a > 0:\n    print("Số dương")\nelif a == 0:\n    print("Số không")\nelse:\n    print("Số âm")`;
+      }
+      state.prevLiveLen = getLiveComposerLength();
+      handleLiveTyping();
+      box.focus();
+    };
+
+    window.copyCodeText = (postId) => {
+      const post = state.posts.find(p => p.id === postId);
+      if (!post?.code) return;
+      navigator.clipboard.writeText(post.code);
+      showToast("Đã sao chép đoạn code Python!", "success");
+    };
+
+    window.copyInviteLink = () => {
+      const url = `${window.location.origin}${window.location.pathname}?room=${encodeURIComponent(state.roomId)}`;
+      navigator.clipboard.writeText(url);
+      showToast("Đã sao chép link mời học sinh (tự điền sẵn mã phòng)!", "success");
+    };
+
+    window.leaveRoom = () => {
+      if (state.role === "student" && state.roomId) {
+        syncMonitorToServer(true);
+      }
+      if (state.pollTimer) clearInterval(state.pollTimer);
+      state.posts = [];
+      state.roomData = null;
+      state.progressData = null;
+      state.groupKey = "";
+      state.teacherPin = "";
+      state.isAway = false;
+      resetComposer();
+      document.getElementById("screen-board").classList.add("hidden");
+      document.getElementById("screen-lobby").classList.remove("hidden");
+    };
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function formatDiscussionText(str) {
+      const escaped = escapeHtml(str);
+      const urlRegex = /(https?:\/\/[^\s<]+)/g;
+      return escaped.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-indigo-600 underline hover:text-indigo-800 font-medium">$1</a>');
+    }
+
+    function showToast(msg, type = "info") {
+      const toast = document.getElementById("toast");
+      const box = document.getElementById("toast-box");
+      const text = document.getElementById("toast-msg");
+
+      text.textContent = msg;
+      box.className = "flex items-start gap-2.5 px-4 py-3 rounded-xl shadow-lg border text-sm font-medium " +
+        (type === "error"
+          ? "bg-rose-50 border-rose-200 text-rose-800"
+          : type === "success"
+          ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+          : "bg-white border-slate-200 text-slate-800");
+
+      toast.classList.remove("hidden");
+      requestAnimationFrame(() => {
+        toast.classList.remove("translate-y-2", "opacity-0");
+      });
+
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => {
+        toast.classList.add("translate-y-2", "opacity-0");
+        setTimeout(() => toast.classList.add("hidden"), 300);
+      }, 3600);
+    }
+
+    lucide.createIcons();
+  </script>
+</body>
+</html>
