@@ -36,7 +36,7 @@
       font-family: 'JetBrains Mono', monospace;
     }
     .hljs {
-      background: rgba(241, 245, 249, 0.9) !important;
+      background: rgba(241, 245, 249, 0.95) !important;
       padding: 0.875rem !important;
       border-radius: 0.5rem;
       font-size: 0.85rem;
@@ -246,7 +246,7 @@
       <!-- =========================================================
            THẺ 1: KHÔNG GIAN THẢO LUẬN (SOẠN THẢO + LƯỚI THẺ BÀI)
       ========================================================== -->
-      <div id="panel-discussion" class="space-y-5">
+      <div id="panel-discussion" class="space-y-4">
         <!-- KHUNG SOẠN THẢO THẺ BÀI KIỂU PADLET -->
         <section id="student-composer" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm p-5 transition-all">
           <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
@@ -279,24 +279,24 @@
               <input id="post-title" type="text" maxlength="120"
                 onfocus="handleComposerFocus()" onblur="handleComposerBlur()"
                 oninput="handleLiveTyping()" onpaste="handleComposerPaste(event)"
-                placeholder="Tiêu đề thẻ bài (VD: Ý kiến thảo luận số 1 / Giải pháp của nhóm...)"
+                placeholder="Tiêu đề thẻ bài (VD: Bài giải của nhóm / Ý kiến thảo luận...)"
                 class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none font-semibold text-sm text-slate-900 placeholder:font-normal" />
             </div>
 
             <div>
-              <textarea id="post-content" rows="4"
+              <textarea id="post-content" rows="3"
                 onfocus="handleComposerFocus()" onblur="handleComposerBlur()"
                 oninput="handleLiveTyping()" onpaste="handleComposerPaste(event)"
-                placeholder="Viết nội dung thảo luận, phân tích vấn đề, lập luận hoặc câu trả lời của nhóm tại đây..."
+                placeholder="Viết nội dung thảo luận, giải thích thuật toán hoặc câu trả lời của nhóm tại đây..."
                 class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm text-slate-800 leading-relaxed"></textarea>
             </div>
 
-            <!-- KHUNG CODE PYTHON + NÚT CHẠY THỬ TRỰC TIẾP -->
-            <div id="code-drawer" class="hidden pt-1 space-y-2">
+            <!-- KHUNG CODE PYTHON HIỂN THỊ SẴN + NÚT CHẠY THỬ TRỰC TIẾP -->
+            <div id="code-drawer" class="pt-1 space-y-2">
               <div class="flex flex-wrap items-center justify-between gap-2">
-                <label class="text-xs font-semibold text-slate-600 flex items-center gap-1.5">
+                <label class="text-xs font-semibold text-indigo-700 flex items-center gap-1.5">
                   <i data-lucide="terminal" class="w-3.5 h-3.5 text-indigo-600"></i>
-                  <span>Đoạn mã Python đính kèm (Hỗ trợ phím Tab thụt lề)</span>
+                  <span>Đoạn mã Python của nhóm (Hỗ trợ phím Tab thụt lề)</span>
                 </label>
                 <div class="flex items-center gap-1.5">
                   <button type="button" onclick="insertPythonTemplate()"
@@ -311,11 +311,11 @@
                 </div>
               </div>
 
-              <textarea id="post-code" rows="5"
+              <textarea id="post-code" rows="6"
                 onfocus="handleComposerFocus()" onblur="handleComposerBlur()"
                 oninput="handleLiveTyping()" onpaste="handleComposerPaste(event)"
                 placeholder="# Nhập hoặc dán code Python tại đây&#10;n = int(input('Nhập n: '))&#10;if n % 2 == 0:&#10;    print('Số chẵn')"
-                class="code-input w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-xs sm:text-sm text-slate-800"></textarea>
+                class="code-input w-full px-3.5 py-2.5 rounded-xl border border-indigo-200 bg-slate-50/90 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-xs sm:text-sm text-slate-800"></textarea>
 
               <!-- Khu vực hiển thị kết quả chạy thử Python trong khung soạn thảo -->
               <div id="composer-python-output" class="hidden rounded-xl border border-slate-300 bg-slate-50 overflow-hidden">
@@ -335,7 +335,7 @@
                 <button type="button" id="btn-toggle-code" onclick="toggleCodeDrawer()"
                   class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold transition">
                   <i data-lucide="code-2" class="w-4 h-4 text-indigo-600"></i>
-                  <span id="btn-toggle-code-text">Đính kèm Code Python</span>
+                  <span id="btn-toggle-code-text">Thu gọn khung Code</span>
                 </button>
                 <span id="composer-char-counter" class="text-xs text-slate-400 font-medium">0 ký tự</span>
                 <span id="student-self-monitor-badge" class="hidden text-xs font-medium px-2.5 py-1 rounded-lg bg-amber-50 border border-amber-200 text-amber-800"></span>
@@ -355,6 +355,14 @@
             </div>
           </form>
         </section>
+
+        <!-- THANH LỌC NHANH THEO NHÓM (Dành cho Giáo viên & Lớp khi xem bài) -->
+        <div id="group-filter-bar" class="hidden bg-white rounded-xl border border-slate-200 px-3.5 py-2 shadow-sm flex flex-wrap items-center gap-1.5 text-xs">
+          <span class="font-semibold text-slate-500 mr-1 flex items-center gap-1">
+            <i data-lucide="filter" class="w-3.5 h-3.5"></i> Xem theo nhóm:
+          </span>
+          <div id="group-filter-buttons" class="flex flex-wrap items-center gap-1.5"></div>
+        </div>
 
         <!-- LƯỚI HIỂN THỊ CÁC THẺ BÀI -->
         <div id="empty-state" class="hidden text-center py-16 bg-white/80 rounded-2xl border border-dashed border-slate-300">
@@ -476,6 +484,52 @@
       return false;
     }
 
+    // Tự động nhận diện code Python nếu học sinh lỡ dán code vào ô Nội dung thảo luận
+    function looksLikePythonCode(text) {
+      if (!text) return false;
+      const trimmed = text.trim();
+      const lines = trimmed.split("\n");
+      if (lines.length < 2) return false;
+      const pyPatterns = [
+        /^\s*(def|class|for|while|if|elif|else|import|from|try|except|return)\b.*[:(]?/m,
+        /\b(print|input|int|float|str|len|range|list|append)\s*\(/,
+        /^[a-zA-Z_]\w*\s*=\s*.+$/m
+      ];
+      let score = 0;
+      for (const re of pyPatterns) {
+        if (re.test(trimmed)) score++;
+      }
+      return score >= 2;
+    }
+
+    // Trích xuất đoạn code Python thực tế của thẻ (ưu tiên cột code, dự phòng nếu HS dán vào content)
+    function getEffectivePostData(post) {
+      const explicitCode = String(post.code || "").replace(/\s+$/, "");
+      const rawContent = String(post.content || "").trim();
+
+      if (explicitCode) {
+        return {
+          displayContent: rawContent,
+          displayCode: explicitCode,
+          autoDetected: false
+        };
+      }
+
+      if (looksLikePythonCode(rawContent)) {
+        return {
+          displayContent: "",
+          displayCode: rawContent,
+          autoDetected: true
+        };
+      }
+
+      return {
+        displayContent: rawContent,
+        displayCode: "",
+        autoDetected: false
+      };
+    }
+
     window.pickGroupName = (name) => {
       document.getElementById("stu-group-name").value = name;
     };
@@ -556,6 +610,7 @@
     const state = {
       role: "student",
       activeMainTab: "discussion",
+      selectedGroupFilter: "ALL",
       roomId: "",
       roomData: null,
       progressData: null,
@@ -564,8 +619,8 @@
       groupKey: "",
       teacherPin: "",
       posts: [],
-      postOutputs: {}, // Lưu kết quả chạy thử Python theo từng postId để không mất khi auto-refresh
-      codeDrawerOpen: false,
+      postOutputs: {},
+      codeDrawerOpen: true, // Mở sẵn khung code Python để HS nhập code không bị sót
       pollTimer: null,
       composerFocused: false,
       lastTypingAt: 0,
@@ -640,14 +695,13 @@
               if (userVal === null) {
                 reject("Đã hủy nhập dữ liệu (input).");
               } else {
-                onAppendOutput(userVal + "\n", false);
                 resolve(userVal);
               }
             }, 30);
           });
         },
         inputfunTakesPrompt: true,
-        execLimit: 5000 // Giới hạn 5 giây chống vòng lặp vô hạn
+        execLimit: 5000
       });
 
       const promise = Sk.misceval.asyncToPromise(function () {
@@ -669,7 +723,6 @@
       );
     }
 
-    // Chạy thử code Python trong khung soạn thảo của Học sinh
     window.runComposerPython = () => {
       const code = document.getElementById("post-code").value;
       const box = document.getElementById("composer-python-output");
@@ -704,10 +757,11 @@
       document.getElementById("composer-python-stdout").textContent = "";
     };
 
-    // Chạy thử code Python trực tiếp trên từng thẻ bài (Giáo viên & Học sinh)
     window.runPostPython = (postId) => {
       const post = state.posts.find(p => p.id === postId);
-      if (!post || !post.code) return;
+      if (!post) return;
+      const effective = getEffectivePostData(post);
+      if (!effective.displayCode) return;
 
       state.postOutputs[postId] = {
         text: "",
@@ -717,7 +771,7 @@
 
       let hasOutput = false;
       executeSkulptPython(
-        post.code,
+        effective.displayCode,
         (chunk, isErr) => {
           hasOutput = true;
           if (!state.postOutputs[postId]) {
@@ -836,7 +890,7 @@
 
     function onStudentLeaveViewport() {
       if (state.role !== "student" || !state.roomId) return;
-      if (state.isRunningPythonPrompt) return; // Không tính là rời tab khi đang nhập input() Python
+      if (state.isRunningPythonPrompt) return;
       if (state.isAway) return;
       state.isAway = true;
       state.awayStartMs = Date.now();
@@ -925,7 +979,7 @@
     };
 
     // =========================================================================
-    // CHUYỂN ĐỔI GIỮA 2 THẺ: THẢO LUẬN & THEO DÕI TIẾN ĐỘ
+    // CHUYỂN ĐỔI GIỮA 2 THẺ & LỌC THEO NHÓM
     // =========================================================================
     window.switchMainTab = (tabName) => {
       state.activeMainTab = tabName;
@@ -959,11 +1013,27 @@
       lucide.createIcons();
     };
 
+    window.setGroupFilter = (normKey) => {
+      state.selectedGroupFilter = normKey || "ALL";
+      renderPosts();
+    };
+
+    window.jumpToGroupCode = (normKey) => {
+      state.selectedGroupFilter = normKey || "ALL";
+      switchMainTab("discussion");
+      renderPosts();
+      const gridEl = document.getElementById("posts-grid");
+      if (gridEl) {
+        gridEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    };
+
     function getLiveComposerLength() {
       if (state.role !== "student") return 0;
       const t = (document.getElementById("post-title")?.value || "").trim().length;
       const c = (document.getElementById("post-content")?.value || "").trim().length;
-      const code = state.codeDrawerOpen ? (document.getElementById("post-code")?.value || "").trim().length : 0;
+      // Luôn tính độ dài code Python bất kể khung code đang mở hay thu gọn
+      const code = (document.getElementById("post-code")?.value || "").trim().length;
       return t + c + code;
     }
 
@@ -1094,6 +1164,7 @@
         if (!norm) return;
 
         const postValidColor = (post.cardColor && CARD_THEMES[post.cardColor]) ? post.cardColor : null;
+        const effective = getEffectivePostData(post);
 
         if (!groupMap.has(norm)) {
           groupMap.set(norm, {
@@ -1125,8 +1196,8 @@
         entry.postCount += 1;
 
         const titleStr = (post.title || "").trim();
-        const contentStr = (post.content || "").trim();
-        const codeStr = (post.code || "").trim();
+        const contentStr = effective.displayContent;
+        const codeStr = effective.displayCode;
 
         let postChars = titleStr.length + contentStr.length + codeStr.length;
         let combinedText = `${titleStr} ${contentStr} ${codeStr}`.trim();
@@ -1136,7 +1207,7 @@
           entry.cardColor = (liveComposerColor && CARD_THEMES[liveComposerColor]) ? liveComposerColor : entry.cardColor;
           const liveT = (document.getElementById("post-title")?.value || "").trim();
           const liveC = (document.getElementById("post-content")?.value || "").trim();
-          const liveCode = state.codeDrawerOpen ? (document.getElementById("post-code")?.value || "").trim() : "";
+          const liveCode = (document.getElementById("post-code")?.value || "").trim();
           combinedText = `${liveT} ${liveC} ${liveCode}`.trim();
           if (liveCode.length > 0) entry.hasCode = true;
         } else if (codeStr.length > 0) {
@@ -1177,7 +1248,7 @@
             myEntry.charLength += liveComposerLen;
             const liveT = (document.getElementById("post-title")?.value || "").trim();
             const liveC = (document.getElementById("post-content")?.value || "").trim();
-            const liveCode = state.codeDrawerOpen ? (document.getElementById("post-code")?.value || "").trim() : "";
+            const liveCode = (document.getElementById("post-code")?.value || "").trim();
             const liveCombined = `${liveT} ${liveC} ${liveCode}`.trim();
             myEntry.wordCount += liveCombined ? liveCombined.split(/\s+/).length : 0;
             if (liveCode.length > 0) myEntry.hasCode = true;
@@ -1231,6 +1302,7 @@
         const theme = resolveTheme(grp.cardColor);
         const isMyGroup = state.role === "student" && grp.normKey === myNormGroup;
         const isActive = grp.hasSubmittedOnServer || grp.postCount > 0 || grp.charLength > 0;
+        const canJumpToCode = grp.postCount > 0 && (state.role === "teacher" || isPublic || isMyGroup);
 
         let widthPercent = 0;
         let lengthLabel = "";
@@ -1268,6 +1340,13 @@
           }
         }
 
+        const viewCodeBtnHtml = canJumpToCode
+          ? `<button type="button" onclick="jumpToGroupCode('${grp.normKey}')"
+               class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 font-semibold text-[11px] shadow-xs transition">
+               <i data-lucide="code-2" class="w-3 h-3"></i> Xem bài & code
+             </button>`
+          : "";
+
         return `
           <div class="px-3.5 py-2 rounded-xl border ${containerClass} ${isMyGroup ? 'ring-2 ring-indigo-300/70' : ''} transition-all">
             <div class="flex flex-wrap items-center justify-between gap-2 mb-1.5">
@@ -1280,8 +1359,9 @@
                 ${teacherAlertBadges}
               </div>
 
-              <div class="flex items-center gap-3 text-xs">
+              <div class="flex items-center gap-2.5 text-xs">
                 <span class="font-bold text-slate-800">${lengthLabel}</span>
+                ${viewCodeBtnHtml}
               </div>
             </div>
 
@@ -1339,12 +1419,11 @@
       const btnText = document.getElementById("btn-toggle-code-text");
       if (state.codeDrawerOpen) {
         drawer.classList.remove("hidden");
-        btnText.textContent = "Ẩn khung Code Python";
+        btnText.textContent = "Thu gọn khung Code";
       } else {
         drawer.classList.add("hidden");
-        btnText.textContent = "Đính kèm Code Python";
+        btnText.textContent = "Mở khung Code Python";
       }
-      handleLiveTyping();
     };
 
     window.switchRole = (role) => {
@@ -1398,6 +1477,7 @@
         state.memberName = memberName || groupName;
         state.groupKey = getNormalizedGroupKey(roomId, groupName);
         state.teacherPin = "";
+        state.selectedGroupFilter = "ALL";
         state.composerFocused = false;
         state.lastTypingAt = 0;
         state.isAway = false;
@@ -1438,6 +1518,7 @@
         state.roomId = roomId;
         state.teacherPin = pin;
         state.groupKey = "";
+        state.selectedGroupFilter = "ALL";
         state.composerFocused = false;
         state.lastTypingAt = 0;
         state.postOutputs = {};
@@ -1475,6 +1556,7 @@
         document.getElementById("student-status-pill").classList.remove("hidden");
         document.getElementById("student-banner").classList.remove("hidden");
         document.getElementById("student-composer").classList.remove("hidden");
+        toggleCodeDrawer(true);
         selectCardColor(getDefaultColorForGroup(state.groupName));
         updateStudentSelfMonitorUI();
       }
@@ -1639,13 +1721,14 @@
       e.preventDefault();
       const title = document.getElementById("post-title").value.trim();
       const content = document.getElementById("post-content").value.trim();
-      const code = state.codeDrawerOpen ? document.getElementById("post-code").value.replace(/\s+$/, "") : "";
+      // Luôn lấy nội dung code Python kể cả khi người dùng bấm thu gọn khung code
+      const code = document.getElementById("post-code").value.replace(/\s+$/, "");
       const rawColor = document.getElementById("post-color").value;
       const cardColor = (rawColor && CARD_THEMES[rawColor]) ? rawColor : getDefaultColorForGroup(state.groupName);
       const editId = document.getElementById("edit-post-id").value;
 
       if (!title && !content && !code) {
-        showToast("Vui lòng nhập tiêu đề hoặc nội dung thảo luận trước khi đăng!", "error");
+        showToast("Vui lòng nhập tiêu đề, nội dung hoặc code Python trước khi đăng!", "error");
         return;
       }
 
@@ -1711,18 +1794,82 @@
       }
     };
 
+    function renderGroupFilterBar(allVisiblePosts) {
+      const bar = document.getElementById("group-filter-bar");
+      const btnWrap = document.getElementById("group-filter-buttons");
+      if (!bar || !btnWrap) return;
+
+      const groupMap = new Map();
+      allVisiblePosts.forEach(p => {
+        const norm = normalizeVi(p.groupName);
+        if (norm && !groupMap.has(norm)) {
+          groupMap.set(norm, p.groupName);
+        }
+      });
+
+      if (groupMap.size <= 1) {
+        bar.classList.add("hidden");
+        state.selectedGroupFilter = "ALL";
+        return;
+      }
+
+      if (state.selectedGroupFilter !== "ALL" && !groupMap.has(state.selectedGroupFilter)) {
+        state.selectedGroupFilter = "ALL";
+      }
+
+      bar.classList.remove("hidden");
+      const sortedGroups = Array.from(groupMap.entries()).sort((a, b) =>
+        a[1].localeCompare(b[1], "vi", { numeric: true })
+      );
+
+      const allActive = state.selectedGroupFilter === "ALL";
+      let html = `
+        <button type="button" onclick="setGroupFilter('ALL')"
+          class="px-2.5 py-1 rounded-lg font-semibold transition ${
+            allActive
+              ? 'bg-indigo-600 text-white shadow-xs'
+              : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+          }">
+          Tất cả (${allVisiblePosts.length})
+        </button>
+      `;
+
+      html += sortedGroups.map(([normKey, label]) => {
+        const active = state.selectedGroupFilter === normKey;
+        return `
+          <button type="button" onclick="setGroupFilter('${normKey}')"
+            class="px-2.5 py-1 rounded-lg font-semibold transition ${
+              active
+                ? 'bg-indigo-600 text-white shadow-xs'
+                : 'bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700'
+            }">
+            ${escapeHtml(label)}
+          </button>
+        `;
+      }).join("");
+
+      btnWrap.innerHTML = html;
+    }
+
     function renderPosts() {
       const grid = document.getElementById("posts-grid");
       const emptyState = document.getElementById("empty-state");
       const isPublic = state.roomData?.isPublic === true;
 
-      let visiblePosts = state.posts;
+      let basePosts = state.posts;
       if (state.role === "student" && !isPublic) {
-        visiblePosts = state.posts.filter(p => checkIsMine(p));
+        basePosts = state.posts.filter(p => checkIsMine(p));
       }
 
-      document.getElementById("board-post-count").textContent = `${visiblePosts.length} thẻ bài`;
-      document.getElementById("badge-tab-discussion").textContent = `${visiblePosts.length}`;
+      document.getElementById("board-post-count").textContent = `${basePosts.length} thẻ bài`;
+      document.getElementById("badge-tab-discussion").textContent = `${basePosts.length}`;
+
+      renderGroupFilterBar(basePosts);
+
+      let visiblePosts = basePosts;
+      if (state.selectedGroupFilter && state.selectedGroupFilter !== "ALL") {
+        visiblePosts = basePosts.filter(p => normalizeVi(p.groupName) === state.selectedGroupFilter);
+      }
 
       visiblePosts = [...visiblePosts].sort((a, b) => {
         if (a.isHighlighted === b.isHighlighted) return 0;
@@ -1734,7 +1881,7 @@
         emptyState.classList.remove("hidden");
         document.getElementById("empty-state-sub").textContent =
           state.role === "student" && !isPublic
-            ? "Nhóm bạn chưa đăng thẻ nào. Hãy nhập ý kiến thảo luận ở khung phía trên!"
+            ? "Nhóm bạn chưa đăng thẻ nào. Hãy nhập ý kiến hoặc code Python ở khung phía trên!"
             : "Chưa có nhóm nào đăng thẻ bài lên bảng.";
         return;
       }
@@ -1749,6 +1896,7 @@
         const editorCount = Math.max(1, editors.length);
         const editorNamesTooltip = editors.map(ed => ed.name).filter(Boolean).join(", ");
         const savedOutput = state.postOutputs[post.id] || null;
+        const effective = getEffectivePostData(post);
 
         let timeStr = "Vừa xong";
         if (post.createdAt) {
@@ -1869,11 +2017,11 @@
               <h4 class="font-bold text-slate-900 text-base leading-snug">${escapeHtml(post.title)}</h4>
             ` : ""}
 
-            ${post.content ? `
-              <div class="text-sm text-slate-700 whitespace-pre-line leading-relaxed break-words">${formatDiscussionText(post.content)}</div>
+            ${effective.displayContent ? `
+              <div class="text-sm text-slate-700 whitespace-pre-line leading-relaxed break-words">${formatDiscussionText(effective.displayContent)}</div>
             ` : ""}
 
-            ${post.code ? `
+            ${effective.displayCode ? `
               <div class="relative group mt-1 space-y-2">
                 <div>
                   <div class="flex items-center justify-between px-3 py-1.5 bg-slate-200/80 rounded-t-lg border border-b-0 border-slate-300/80 text-[11px] font-semibold text-slate-600">
@@ -1889,7 +2037,7 @@
                       </button>
                     </div>
                   </div>
-                  <pre class="!m-0 !rounded-t-none border border-slate-300/80 overflow-x-auto"><code class="language-python">${escapeHtml(post.code)}</code></pre>
+                  <pre class="!m-0 !rounded-t-none border border-slate-300/80 overflow-x-auto"><code class="language-python">${escapeHtml(effective.displayCode)}</code></pre>
                 </div>
 
                 <!-- Kết quả chạy thử Python ngay trên thẻ bài -->
@@ -1968,16 +2116,17 @@
     window.startEditPost = (postId) => {
       const post = state.posts.find(p => p.id === postId && checkIsMine(p));
       if (!post) return;
+      const effective = getEffectivePostData(post);
       switchMainTab("discussion");
       document.getElementById("edit-post-id").value = post.id;
       document.getElementById("post-title").value = post.title || "";
-      document.getElementById("post-content").value = post.content || "";
-      document.getElementById("post-code").value = post.code || "";
+      document.getElementById("post-content").value = effective.displayContent;
+      document.getElementById("post-code").value = effective.displayCode;
       const safeColor = (post.cardColor && CARD_THEMES[post.cardColor])
         ? post.cardColor
         : getDefaultColorForGroup(state.groupName);
       selectCardColor(safeColor);
-      toggleCodeDrawer(Boolean(post.code));
+      toggleCodeDrawer(true);
       clearComposerOutput();
 
       document.getElementById("composer-heading").textContent = "Chỉnh sửa thẻ thảo luận của nhóm";
@@ -1988,7 +2137,7 @@
       state.prevLiveLen = getLiveComposerLength();
       handleLiveTyping();
       document.getElementById("student-composer").scrollIntoView({ behavior: "smooth" });
-      document.getElementById("post-content").focus();
+      document.getElementById("post-code").focus();
     };
 
     window.resetComposer = () => {
@@ -1997,7 +2146,7 @@
       document.getElementById("post-content").value = "";
       document.getElementById("post-code").value = "";
       selectCardColor(getDefaultColorForGroup(state.groupName));
-      toggleCodeDrawer(false);
+      toggleCodeDrawer(true);
       clearComposerOutput();
 
       document.getElementById("composer-heading").textContent = "Tạo thẻ thảo luận mới";
@@ -2021,8 +2170,10 @@
 
     window.copyCodeText = (postId) => {
       const post = state.posts.find(p => p.id === postId);
-      if (!post?.code) return;
-      navigator.clipboard.writeText(post.code);
+      if (!post) return;
+      const effective = getEffectivePostData(post);
+      if (!effective.displayCode) return;
+      navigator.clipboard.writeText(effective.displayCode);
       showToast("Đã sao chép đoạn code Python!", "success");
     };
 
@@ -2043,6 +2194,7 @@
       state.progressData = null;
       state.groupKey = "";
       state.teacherPin = "";
+      state.selectedGroupFilter = "ALL";
       state.isAway = false;
       resetComposer();
       document.getElementById("screen-board").classList.add("hidden");
