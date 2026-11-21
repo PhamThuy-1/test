@@ -620,6 +620,8 @@
       teacherPin: "",
       posts: [],
       postOutputs: {},
+      openCommentBoxes: {},
+      commentDrafts: {},
       codeDrawerOpen: true, // Mở sẵn khung code Python để HS nhập code không bị sót
       pollTimer: null,
       composerFocused: false,
@@ -1199,11 +1201,14 @@
         const contentStr = effective.displayContent;
         const codeStr = effective.displayCode;
 
-        let postChars = titleStr.length + contentStr.length + codeStr.length;
-        let combinedText = `${titleStr} ${contentStr} ${codeStr}`.trim();
+        const contribList = Array.isArray(post.contributions) ? post.contributions : [];
+        const contribText = contribList.map(c => `${c.memberName || ""}: ${c.text || ""}`).join(" ").trim();
+
+        let postChars = titleStr.length + contentStr.length + codeStr.length + contribText.length;
+        let combinedText = `${titleStr} ${contentStr} ${codeStr} ${contribText}`.trim();
 
         if (state.role === "student" && editId && post.id === editId) {
-          postChars = liveComposerLen;
+          postChars = liveComposerLen + contribText.length;
           entry.cardColor = (liveComposerColor && CARD_THEMES[liveComposerColor]) ? liveComposerColor : entry.cardColor;
           const liveT = (document.getElementById("post-title")?.value || "").trim();
           const liveC = (document.getElementById("post-content")?.value || "").trim();
@@ -1853,6 +1858,12 @@
 
     function renderPosts() {
       const grid = document.getElementById("posts-grid");
+      const activeEl = document.activeElement;
+      const focusedInputId = (activeEl && activeEl.id && (activeEl.id.startsWith("comment-input-") || activeEl.id.startsWith("comment-name-")))
+        ? activeEl.id
+        : null;
+      const selStart = focusedInputId ? activeEl.selectionStart : 0;
+      const selEnd = focusedInputId ? activeEl.selectionEnd : 0;
       const emptyState = document.getElementById("empty-state");
       const isPublic = state.roomData?.isPublic === true;
 
@@ -1897,7 +1908,32 @@
         const editorNamesTooltip = editors.map(ed => ed.name).filter(Boolean).join(", ");
         const savedOutput = state.postOutputs[post.id] || null;
         const effective = getEffectivePostData(post);
+const contributions = Array.isArray(post.contributions) ? post.contributions : [];
+        const isCommentOpen = Boolean(state.openCommentBoxes[post.id]);
+        const commentDraft = state.commentDrafts[post.id] || "";
+        const needAskName = !state.memberName || normalizeVi(state.memberName) === normalizeVi(state.groupName);
 
+        const uniqueParticipants = new Set(editors.map(ed => ed.name).filter(Boolean));
+        contributions.forEach(c => { if (c.memberName) uniqueParticipants.add(c.memberName); });
+        const totalParticipantsCount = Math.max(editorCount, uniqueParticipants.size);
+        const allParticipantsTooltip = Array.from(uniqueParticipants).join(", ") || editorNamesTooltip;
+
+        const contributionsHtml = contributions.length > 0 ? `
+          <div class="mt-1 rounded-xl bg-white/85 border border-slate-200/80 p-3 space-y-1.5">
+            <div class="text-[11px] font-bold uppercase tracking-wider text-indigo-700 flex items-center gap-1.5">
+              <i data-lucide="messages-square" class="w-3.5 h-3.5"></i>
+              <span>Ý kiến đóng góp thành viên (${contributions.length})</span>
+            </div>
+            <ul class="space-y-1.5 text-xs sm:text-sm text-slate-700">
+              ${contributions.map(c => `
+                <li class="leading-relaxed pl-2.5 border-l-2 border-indigo-300 break-words">
+                  <span class="font-semibold text-slate-900">- ${escapeHtml(c.memberName || "Thành viên")}:</span>
+                  <span> ${formatDiscussionText(c.text || "")}</span>
+                </li>
+              `).join("")}
+            </ul>
+          </div>
+        ` : "";
         let timeStr = "Vừa xong";
         if (post.createdAt) {
           const d = new Date(post.createdAt);
@@ -2056,16 +2092,59 @@
               </div>
             ` : ""}
 
+           ${contributionsHtml}
+
             ${teacherMonitorHtml}
 
-            <div class="pt-2.5 mt-auto border-t border-slate-200/60 flex items-center justify-between gap-2">
-              <span title="${editorNamesTooltip ? 'Thành viên tham gia: ' + escapeHtml(editorNamesTooltip) : ''}"
-                class="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
-                <i data-lucide="users" class="w-3.5 h-3.5 text-slate-400"></i>
-                <span>${editorCount} thành viên tham gia chỉnh sửa</span>
-              </span>
+            <div class="pt-2.5 mt-auto border-t border-slate-200/60 space-y-2.5">
+              <div class="flex items-center justify-between gap-2 flex-wrap">
+                <span title="${allParticipantsTooltip ? 'Thành viên tham gia: ' + escapeHtml(allParticipantsTooltip) : ''}"
+                  class="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
+                  <i data-lucide="users" class="w-3.5 h-3.5 text-slate-400"></i>
+                  <span>${totalParticipantsCount} thành viên tham gia</span>
+                </span>
 
-              ${heartButtonHtml}
+                <div class="flex items-center gap-2">
+                  ${isMine ? `
+                    <button type="button" onclick="toggleCommentBox('${post.id}')"
+                      class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition">
+                      <i data-lucide="message-square-plus" class="w-3.5 h-3.5"></i>
+                      <span>+ Góp ý thành viên</span>
+                    </button>
+                  ` : ""}
+                  ${heartButtonHtml}
+                </div>
+              </div>
+
+              ${(isMine && isCommentOpen) ? `
+                <div class="p-2.5 rounded-xl bg-white border border-indigo-200 shadow-xs space-y-2">
+                  ${needAskName ? `
+                    <input id="comment-name-${post.id}" type="text" placeholder="Nhập họ tên của bạn (VD: Nguyễn Minh Anh)..."
+                      class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none" />
+                  ` : `
+                    <div class="text-[11px] text-slate-500">
+                      Góp ý dưới tên: <strong class="text-indigo-700">${escapeHtml(state.memberName)}</strong>
+                    </div>
+                  `}
+                  <textarea id="comment-input-${post.id}" rows="2"
+                    oninput="saveCommentDraft('${post.id}', this.value)"
+                    onpaste="handleComposerPaste(event)"
+                    onkeydown="if(event.ctrlKey && event.key === 'Enter'){ submitMemberComment('${post.id}'); }"
+                    placeholder="Nhập ý kiến bổ sung của riêng bạn vào thẻ nhóm..."
+                    class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs sm:text-sm text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">${escapeHtml(commentDraft)}</textarea>
+                  <div class="flex items-center justify-end gap-1.5">
+                    <button type="button" onclick="toggleCommentBox('${post.id}', false)"
+                      class="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
+                      Đóng
+                    </button>
+                    <button type="button" id="btn-send-comment-${post.id}" onclick="submitMemberComment('${post.id}')"
+                      class="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition">
+                      <i data-lucide="send" class="w-3 h-3"></i>
+                      <span>Gửi ý kiến</span>
+                    </button>
+                  </div>
+                </div>
+              ` : ""}
             </div>
           </article>
         `;
@@ -2075,6 +2154,15 @@
       document.querySelectorAll("pre code").forEach((block) => {
         hljs.highlightElement(block);
       });
+      if (focusedInputId) {
+        const restoredEl = document.getElementById(focusedInputId);
+        if (restoredEl) {
+          restoredEl.focus();
+          if (typeof restoredEl.setSelectionRange === "function") {
+            restoredEl.setSelectionRange(selStart, selEnd);
+          }
+        }
+      }
     }
 
     window.toggleHighlight = async (postId, currentVal) => {
@@ -2112,7 +2200,75 @@
         showToast("Không thể xóa bài!", "error");
       }
     };
+window.toggleCommentBox = (postId, forceState = null) => {
+      const next = forceState !== null ? forceState : !state.openCommentBoxes[postId];
+      state.openCommentBoxes[postId] = next;
+      renderPosts();
+      if (next) {
+        setTimeout(() => {
+          const nameEl = document.getElementById(`comment-name-${postId}`);
+          const inputEl = document.getElementById(`comment-input-${postId}`);
+          if (nameEl) nameEl.focus();
+          else if (inputEl) inputEl.focus();
+        }, 30);
+      }
+    };
 
+    window.saveCommentDraft = (postId, val) => {
+      state.commentDrafts[postId] = val;
+    };
+
+    window.submitMemberComment = async (postId) => {
+      const inputEl = document.getElementById(`comment-input-${postId}`);
+      const text = (inputEl ? inputEl.value : (state.commentDrafts[postId] || "")).trim();
+      if (!text) {
+        showToast("Vui lòng nhập nội dung ý kiến trước khi gửi!", "error");
+        return;
+      }
+
+      const nameInputEl = document.getElementById(`comment-name-${postId}`);
+      if (nameInputEl && nameInputEl.value.trim()) {
+        state.memberName = nameInputEl.value.trim();
+      }
+
+      const btn = document.getElementById(`btn-send-comment-${postId}`);
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<span>Đang gửi...</span>`;
+      }
+
+      try {
+        const res = await callSheetApi({
+          action: "addContribution",
+          id: postId,
+          roomId: state.roomId,
+          groupKey: state.groupKey,
+          groupName: state.groupName,
+          memberId: myMemberId,
+          memberName: state.memberName || state.groupName,
+          text: text,
+          monitor: state.monitor
+        });
+
+        if (!res.ok) {
+          showToast(res.error || "Không thể gửi góp ý!", "error");
+          return;
+        }
+
+        state.commentDrafts[postId] = "";
+        state.openCommentBoxes[postId] = false;
+        showToast("Đã nối ý kiến của bạn vào thẻ nhóm!", "success");
+        await fetchBoardData();
+      } catch (err) {
+        showToast("Lỗi kết nối Google Sheets khi gửi góp ý!", "error");
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `<i data-lucide="send" class="w-3 h-3"></i><span>Gửi ý kiến</span>`;
+          lucide.createIcons();
+        }
+      }
+    };
     window.startEditPost = (postId) => {
       const post = state.posts.find(p => p.id === postId && checkIsMine(p));
       if (!post) return;
