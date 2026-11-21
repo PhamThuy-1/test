@@ -16,6 +16,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
 
+  <!-- Skulpt: Trình chạy Python trực tiếp trên trình duyệt -->
+  <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js"></script>
+
   <!-- Google Fonts: Inter & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -68,7 +72,7 @@
           <i data-lucide="layout-grid" class="w-6 h-6 text-white"></i>
         </div>
         <h1 class="text-xl font-bold tracking-tight">Bảng Thảo Luận Lớp Học</h1>
-        <p class="text-blue-100 text-sm mt-1">Chia sẻ ý kiến thảo luận & bài làm thời gian thực</p>
+        <p class="text-blue-100 text-sm mt-1">Chia sẻ ý kiến thảo luận & chạy thử code Python trực tiếp</p>
       </div>
 
       <!-- Cảnh báo nếu chưa dán link Apps Script -->
@@ -287,22 +291,43 @@
                 class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm text-slate-800 leading-relaxed"></textarea>
             </div>
 
-            <div id="code-drawer" class="hidden pt-1">
-              <div class="flex items-center justify-between mb-1.5">
+            <!-- KHUNG CODE PYTHON + NÚT CHẠY THỬ TRỰC TIẾP -->
+            <div id="code-drawer" class="hidden pt-1 space-y-2">
+              <div class="flex flex-wrap items-center justify-between gap-2">
                 <label class="text-xs font-semibold text-slate-600 flex items-center gap-1.5">
                   <i data-lucide="terminal" class="w-3.5 h-3.5 text-indigo-600"></i>
                   <span>Đoạn mã Python đính kèm (Hỗ trợ phím Tab thụt lề)</span>
                 </label>
-                <button type="button" onclick="insertPythonTemplate()"
-                  class="text-xs font-medium px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
-                  + Chèn mẫu if-else
-                </button>
+                <div class="flex items-center gap-1.5">
+                  <button type="button" onclick="insertPythonTemplate()"
+                    class="text-xs font-medium px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
+                    + Chèn mẫu if-else
+                  </button>
+                  <button type="button" onclick="runComposerPython()"
+                    class="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition">
+                    <i data-lucide="play" class="w-3.5 h-3.5 fill-white"></i>
+                    <span>Chạy thử code</span>
+                  </button>
+                </div>
               </div>
+
               <textarea id="post-code" rows="5"
                 onfocus="handleComposerFocus()" onblur="handleComposerBlur()"
                 oninput="handleLiveTyping()" onpaste="handleComposerPaste(event)"
                 placeholder="# Nhập hoặc dán code Python tại đây&#10;n = int(input('Nhập n: '))&#10;if n % 2 == 0:&#10;    print('Số chẵn')"
                 class="code-input w-full px-3.5 py-2.5 rounded-xl border border-slate-300 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-xs sm:text-sm text-slate-800"></textarea>
+
+              <!-- Khu vực hiển thị kết quả chạy thử Python trong khung soạn thảo -->
+              <div id="composer-python-output" class="hidden rounded-xl border border-slate-300 bg-slate-50 overflow-hidden">
+                <div class="flex items-center justify-between px-3 py-1.5 bg-slate-200/70 border-b border-slate-300/80 text-[11px] font-semibold text-slate-700">
+                  <span class="flex items-center gap-1.5">
+                    <i data-lucide="terminal-square" class="w-3.5 h-3.5 text-emerald-600"></i>
+                    <span>Kết quả chạy thử Python</span>
+                  </span>
+                  <button type="button" onclick="clearComposerOutput()" class="text-slate-500 hover:text-rose-600 transition">Đóng</button>
+                </div>
+                <pre id="composer-python-stdout" class="p-3 text-xs font-mono whitespace-pre-wrap break-words leading-relaxed text-slate-800 max-h-48 overflow-y-auto"></pre>
+              </div>
             </div>
 
             <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
@@ -349,7 +374,6 @@
       ========================================================== -->
       <div id="panel-progress" class="hidden">
         <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-3.5 sm:p-4">
-          <!-- Header & Bộ chỉ số tổng quan gọn gàng -->
           <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 mb-3 border-b border-slate-200/80">
             <div class="flex items-center gap-2.5">
               <div class="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
@@ -364,7 +388,6 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-1.5 text-xs">
-              <!-- Nút điều chỉnh tổng số nhóm dành riêng cho Giáo viên -->
               <div id="teacher-group-target" class="hidden items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 font-medium">
                 <span>Tổng số nhóm:</span>
                 <button type="button" onclick="changeTotalGroups(-1)" class="w-5 h-5 rounded bg-white hover:bg-slate-200 border border-slate-300 font-bold flex items-center justify-center">-</button>
@@ -379,9 +402,8 @@
             </div>
           </div>
 
-          <!-- Danh sách thanh tiến độ của TỪNG NHÓM (Tối đa 5 nhóm hiển thị gọn không cần cuộn) -->
+          <!-- Danh sách thanh tiến độ của TỪNG NHÓM -->
           <div id="per-group-progress-list" class="space-y-2">
-            <!-- Render tự động mỗi nhóm 1 thanh tại đây -->
           </div>
         </section>
       </div>
@@ -390,7 +412,7 @@
   </div>
 
   <!-- =========================================================
-       LOGIC KẾT NỐI GOOGLE SHEETS & GIÁM SÁT HÀNH VI THỜI GIAN THỰC
+       LOGIC KẾT NỐI GOOGLE SHEETS, CHẠY PYTHON & GIÁM SÁT HÀNH VI
   ========================================================== -->
   <script>
     // =========================================================================
@@ -542,13 +564,14 @@
       groupKey: "",
       teacherPin: "",
       posts: [],
+      postOutputs: {}, // Lưu kết quả chạy thử Python theo từng postId để không mất khi auto-refresh
       codeDrawerOpen: false,
       pollTimer: null,
       composerFocused: false,
       lastTypingAt: 0,
       prevLiveLen: 0,
       lastPasteEventMs: 0,
-      // Giám sát hành vi chuyển tab & dán văn bản
+      isRunningPythonPrompt: false,
       monitor: {
         tabLeaves: 0,
         awaySeconds: 0,
@@ -578,6 +601,155 @@
         this.selectionStart = this.selectionEnd = start + 4;
       }
     });
+
+    // =========================================================================
+    // TRÌNH BIÊN DỊCH & CHẠY THỬ CODE PYTHON TRỰC TIẾP (SKULPT)
+    // =========================================================================
+    function executeSkulptPython(codeText, onAppendOutput, onComplete) {
+      if (typeof Sk === "undefined") {
+        onAppendOutput("Lỗi: Thư viện chạy Python đang tải, vui lòng thử lại sau vài giây.", true);
+        onComplete(true);
+        return;
+      }
+
+      if (!codeText || !codeText.trim()) {
+        onAppendOutput("Chưa có đoạn mã Python nào để chạy.", true);
+        onComplete(true);
+        return;
+      }
+
+      Sk.configure({
+        output: function (text) {
+          onAppendOutput(text, false);
+        },
+        read: function (filename) {
+          if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][filename] === undefined) {
+            throw "File not found: '" + filename + "'";
+          }
+          return Sk.builtinFiles["files"][filename];
+        },
+        inputfun: function (promptText) {
+          return new Promise(function (resolve, reject) {
+            state.isRunningPythonPrompt = true;
+            setTimeout(function () {
+              const userVal = window.prompt(promptText || "Nhập giá trị đầu vào (input):");
+              setTimeout(function () {
+                state.isRunningPythonPrompt = false;
+              }, 200);
+
+              if (userVal === null) {
+                reject("Đã hủy nhập dữ liệu (input).");
+              } else {
+                onAppendOutput(userVal + "\n", false);
+                resolve(userVal);
+              }
+            }, 30);
+          });
+        },
+        inputfunTakesPrompt: true,
+        execLimit: 5000 // Giới hạn 5 giây chống vòng lặp vô hạn
+      });
+
+      const promise = Sk.misceval.asyncToPromise(function () {
+        return Sk.importMainWithBody("<stdin>", false, codeText, true);
+      });
+
+      promise.then(
+        function () {
+          onComplete(false);
+        },
+        function (err) {
+          let errMsg = String(err);
+          if (errMsg.includes("TimeLimitError")) {
+            errMsg = "Lỗi quá thời gian (TimeLimitError): Chương trình chạy quá 5 giây, hãy kiểm tra lại vòng lặp while!";
+          }
+          onAppendOutput("\n" + errMsg, true);
+          onComplete(true);
+        }
+      );
+    }
+
+    // Chạy thử code Python trong khung soạn thảo của Học sinh
+    window.runComposerPython = () => {
+      const code = document.getElementById("post-code").value;
+      const box = document.getElementById("composer-python-output");
+      const stdoutEl = document.getElementById("composer-python-stdout");
+
+      box.classList.remove("hidden");
+      stdoutEl.className = "p-3 text-xs font-mono whitespace-pre-wrap break-words leading-relaxed text-slate-800 max-h-48 overflow-y-auto";
+      stdoutEl.textContent = "";
+
+      let hasOutput = false;
+      executeSkulptPython(
+        code,
+        (chunk, isErr) => {
+          hasOutput = true;
+          stdoutEl.textContent += chunk;
+          if (isErr) {
+            stdoutEl.classList.remove("text-slate-800");
+            stdoutEl.classList.add("text-rose-700");
+          }
+        },
+        (hasError) => {
+          if (!hasError && !hasOutput) {
+            stdoutEl.textContent = "(Chương trình chạy hoàn tất, không có dữ liệu in ra màn hình)";
+            stdoutEl.classList.add("text-slate-500");
+          }
+        }
+      );
+    };
+
+    window.clearComposerOutput = () => {
+      document.getElementById("composer-python-output").classList.add("hidden");
+      document.getElementById("composer-python-stdout").textContent = "";
+    };
+
+    // Chạy thử code Python trực tiếp trên từng thẻ bài (Giáo viên & Học sinh)
+    window.runPostPython = (postId) => {
+      const post = state.posts.find(p => p.id === postId);
+      if (!post || !post.code) return;
+
+      state.postOutputs[postId] = {
+        text: "",
+        isError: false
+      };
+      renderPosts();
+
+      let hasOutput = false;
+      executeSkulptPython(
+        post.code,
+        (chunk, isErr) => {
+          hasOutput = true;
+          if (!state.postOutputs[postId]) {
+            state.postOutputs[postId] = { text: "", isError: false };
+          }
+          state.postOutputs[postId].text += chunk;
+          if (isErr) state.postOutputs[postId].isError = true;
+
+          const liveEl = document.getElementById(`post-stdout-${postId}`);
+          if (liveEl) {
+            liveEl.textContent = state.postOutputs[postId].text;
+            if (isErr) {
+              liveEl.classList.remove("text-slate-800", "text-slate-500");
+              liveEl.classList.add("text-rose-700");
+            }
+          }
+        },
+        (hasError) => {
+          if (!state.postOutputs[postId]) return;
+          if (!hasError && !hasOutput) {
+            state.postOutputs[postId].text = "(Chương trình chạy hoàn tất, không có dữ liệu in ra màn hình)";
+            state.postOutputs[postId].isEmptyHint = true;
+          }
+          renderPosts();
+        }
+      );
+    };
+
+    window.closePostOutput = (postId) => {
+      delete state.postOutputs[postId];
+      renderPosts();
+    };
 
     // =========================================================================
     // GIÁM SÁT CHUYỂN TAB / RỜI CỬA SỔ & GẮN CỜ DÁN VĂN BẢN
@@ -664,6 +836,7 @@
 
     function onStudentLeaveViewport() {
       if (state.role !== "student" || !state.roomId) return;
+      if (state.isRunningPythonPrompt) return; // Không tính là rời tab khi đang nhập input() Python
       if (state.isAway) return;
       state.isAway = true;
       state.awayStartMs = Date.now();
@@ -719,7 +892,6 @@
       }
     });
 
-    // Bắt sự kiện dán văn bản (onpaste) trong khung soạn thảo
     window.handleComposerPaste = (e) => {
       if (state.role !== "student" || !state.roomId) return;
       const pasted = (e.clipboardData || window.clipboardData)?.getData("text") || "";
@@ -819,7 +991,6 @@
         counterEl.textContent = `${liveLen} ký tự`;
       }
 
-      // Phát hiện chèn đột ngột >= 60 ký tự trong < 1.5s mà không qua sự kiện paste chuẩn
       if (state.role === "student" && state.roomId) {
         const delta = liveLen - state.prevLiveLen;
         const now = Date.now();
@@ -1086,7 +1257,6 @@
           statusTag = `<span class="px-2 py-0.5 text-[11px] font-semibold rounded-md ${theme.badge} border">${grp.postCount > 0 ? `${grp.postCount} thẻ • ${theme.label}` : `Đang soạn • ${theme.label}`}</span>`;
         }
 
-        // Nhãn giám sát dành riêng cho Giáo viên trên thanh tiến độ
         let teacherAlertBadges = "";
         if (state.role === "teacher" && grp.monitor) {
           const m = grp.monitor;
@@ -1231,6 +1401,7 @@
         state.composerFocused = false;
         state.lastTypingAt = 0;
         state.isAway = false;
+        state.postOutputs = {};
         state.monitor = { tabLeaves: 0, awaySeconds: 0, pasteCount: 0, pastedChars: 0, suspiciousPaste: false };
         loadLocalMonitor();
         await enterBoard();
@@ -1269,6 +1440,7 @@
         state.groupKey = "";
         state.composerFocused = false;
         state.lastTypingAt = 0;
+        state.postOutputs = {};
         await enterBoard();
       } catch (err) {
         showToast("Lỗi kết nối Google Sheets. Hãy kiểm tra lại link Web App!", "error");
@@ -1356,7 +1528,7 @@
           pill.innerHTML = `<span>🔓 Đang mở toàn lớp</span>`;
 
           banner.className = "border-b border-emerald-200 bg-emerald-50/80 px-4 py-2 text-sm text-emerald-800";
-          bannerContent.innerHTML = `<div class="flex items-center gap-2"><i data-lucide="heart" class="w-4 h-4 text-rose-500 shrink-0"></i><span><strong>Đã mở công khai:</strong> Bạn có thể xem bài làm và bấm <strong>Thả tim</strong> cho các thẻ bài hữu ích của nhóm bạn!</span></div>${strictTag}`;
+          bannerContent.innerHTML = `<div class="flex items-center gap-2"><i data-lucide="heart" class="w-4 h-4 text-rose-500 shrink-0"></i><span><strong>Đã mở công khai:</strong> Bạn có thể xem bài làm, chạy thử code và bấm <strong>Thả tim</strong> cho các thẻ bài hữu ích!</span></div>${strictTag}`;
         } else {
           pill.className = "px-3 py-1 rounded-full text-xs font-semibold border border-amber-200 bg-amber-50 text-amber-800 flex items-center gap-1.5";
           pill.innerHTML = `<span>🔒 Làm việc độc lập</span>`;
@@ -1503,6 +1675,7 @@
             showToast(res.error || "Không thể sửa bài!", "error");
             return;
           }
+          delete state.postOutputs[editId];
           showToast("Đã cập nhật thẻ bài của nhóm!", "success");
         } else {
           res = await callSheetApi({
@@ -1575,6 +1748,7 @@
         const editors = Array.isArray(post.editors) ? post.editors : [];
         const editorCount = Math.max(1, editors.length);
         const editorNamesTooltip = editors.map(ed => ed.name).filter(Boolean).join(", ");
+        const savedOutput = state.postOutputs[post.id] || null;
 
         let timeStr = "Vừa xong";
         if (post.createdAt) {
@@ -1592,7 +1766,6 @@
           ? "ring-2 ring-amber-400 bg-amber-50/90 border-amber-300 shadow-md"
           : `${themeClass} shadow-sm`;
 
-        // Thanh thông tin giám sát chỉ hiển thị cho Giáo viên
         let teacherMonitorHtml = "";
         if (isTeacher && post.monitor) {
           const m = post.monitor;
@@ -1649,6 +1822,10 @@
           `;
         }
 
+        const outputTextColor = savedOutput
+          ? (savedOutput.isError ? "text-rose-700" : (savedOutput.isEmptyHint ? "text-slate-500" : "text-slate-800"))
+          : "text-slate-800";
+
         return `
           <article class="rounded-2xl border ${highlightCardClass} p-5 transition-all flex flex-col gap-3">
             <!-- Header thẻ -->
@@ -1697,15 +1874,37 @@
             ` : ""}
 
             ${post.code ? `
-              <div class="relative group mt-1">
-                <div class="flex items-center justify-between px-3 py-1.5 bg-slate-200/80 rounded-t-lg border border-b-0 border-slate-300/80 text-[11px] font-semibold text-slate-600">
-                  <span>Python</span>
-                  <button type="button" onclick="copyCodeText('${post.id}')"
-                    class="flex items-center gap-1 text-slate-600 hover:text-indigo-600 transition">
-                    <i data-lucide="copy" class="w-3 h-3"></i> Copy code
-                  </button>
+              <div class="relative group mt-1 space-y-2">
+                <div>
+                  <div class="flex items-center justify-between px-3 py-1.5 bg-slate-200/80 rounded-t-lg border border-b-0 border-slate-300/80 text-[11px] font-semibold text-slate-600">
+                    <span>Python</span>
+                    <div class="flex items-center gap-2">
+                      <button type="button" onclick="runPostPython('${post.id}')"
+                        class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-sm transition">
+                        <i data-lucide="play" class="w-3 h-3 fill-white"></i> Chạy thử
+                      </button>
+                      <button type="button" onclick="copyCodeText('${post.id}')"
+                        class="inline-flex items-center gap-1 text-slate-600 hover:text-indigo-600 transition">
+                        <i data-lucide="copy" class="w-3 h-3"></i> Copy code
+                      </button>
+                    </div>
+                  </div>
+                  <pre class="!m-0 !rounded-t-none border border-slate-300/80 overflow-x-auto"><code class="language-python">${escapeHtml(post.code)}</code></pre>
                 </div>
-                <pre class="!m-0 !rounded-t-none border border-slate-300/80 overflow-x-auto"><code class="language-python">${escapeHtml(post.code)}</code></pre>
+
+                <!-- Kết quả chạy thử Python ngay trên thẻ bài -->
+                ${savedOutput ? `
+                  <div class="rounded-lg border border-slate-300 bg-white/95 overflow-hidden shadow-sm">
+                    <div class="flex items-center justify-between px-2.5 py-1 bg-slate-100 border-b border-slate-200 text-[11px] font-semibold text-slate-700">
+                      <span class="flex items-center gap-1">
+                        <i data-lucide="terminal-square" class="w-3.5 h-3.5 text-emerald-600"></i>
+                        <span>Kết quả chạy</span>
+                      </span>
+                      <button type="button" onclick="closePostOutput('${post.id}')" class="text-slate-400 hover:text-rose-600 transition">Đóng</button>
+                    </div>
+                    <pre id="post-stdout-${post.id}" class="p-2.5 text-xs font-mono whitespace-pre-wrap break-words leading-relaxed ${outputTextColor} max-h-40 overflow-y-auto">${escapeHtml(savedOutput.text)}</pre>
+                  </div>
+                ` : ""}
               </div>
             ` : ""}
 
@@ -1758,6 +1957,7 @@
           pin: state.teacherPin
         });
         if (!res.ok) return showToast(res.error || "Không thể xóa bài!", "error");
+        delete state.postOutputs[postId];
         showToast("Đã xóa thẻ bài!", "success");
         await fetchBoardData();
       } catch (err) {
@@ -1778,6 +1978,7 @@
         : getDefaultColorForGroup(state.groupName);
       selectCardColor(safeColor);
       toggleCodeDrawer(Boolean(post.code));
+      clearComposerOutput();
 
       document.getElementById("composer-heading").textContent = "Chỉnh sửa thẻ thảo luận của nhóm";
       document.getElementById("btn-submit-post-text").textContent = "Lưu thay đổi";
@@ -1797,6 +1998,7 @@
       document.getElementById("post-code").value = "";
       selectCardColor(getDefaultColorForGroup(state.groupName));
       toggleCodeDrawer(false);
+      clearComposerOutput();
 
       document.getElementById("composer-heading").textContent = "Tạo thẻ thảo luận mới";
       document.getElementById("btn-submit-post-text").textContent = "Đăng thẻ bài";
@@ -1836,6 +2038,7 @@
       }
       if (state.pollTimer) clearInterval(state.pollTimer);
       state.posts = [];
+      state.postOutputs = {};
       state.roomData = null;
       state.progressData = null;
       state.groupKey = "";
