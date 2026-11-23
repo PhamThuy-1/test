@@ -274,15 +274,6 @@
           <form onsubmit="handlePostSubmit(event)" class="space-y-3">
             <input type="hidden" id="edit-post-id" value="" />
             <input type="hidden" id="post-color" value="sky" />
-
-            <div>
-              <input id="post-title" type="text" maxlength="120"
-                onfocus="handleComposerFocus()" onblur="handleComposerBlur()"
-                oninput="handleLiveTyping()" onpaste="handleComposerPaste(event)"
-                placeholder="Tiêu đề thẻ bài (VD: Bài giải của nhóm / Ý kiến thảo luận...)"
-                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none font-semibold text-sm text-slate-900 placeholder:font-normal" />
-            </div>
-
             <div>
               <textarea id="post-content" rows="3"
                 onfocus="handleComposerFocus()" onblur="handleComposerBlur()"
@@ -299,11 +290,7 @@
                   <span>Đoạn mã Python của nhóm (Hỗ trợ phím Tab thụt lề)</span>
                 </label>
                 <div class="flex items-center gap-1.5">
-                  <button type="button" onclick="insertPythonTemplate()"
-                    class="text-xs font-medium px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
-                    + Chèn mẫu if-else
-                  </button>
-                  <button type="button" onclick="runComposerPython()"
+                 <button type="button" onclick="runComposerPython()"
                     class="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition">
                     <i data-lucide="play" class="w-3.5 h-3.5 fill-white"></i>
                     <span>Chạy thử code</span>
