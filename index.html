@@ -253,27 +253,10 @@
             <h3 class="font-bold text-slate-800 flex items-center gap-2 text-base">
               <i data-lucide="message-square-plus" class="w-5 h-5 text-indigo-600"></i>
               <span id="composer-heading">Tạo thẻ thảo luận mới</span>
-            </h3>
-
-            <!-- Bảng chọn màu thẻ (Đồng bộ trực tiếp với màu thanh tiến độ nhóm) -->
-            <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
-              <span class="text-xs font-medium text-slate-500">Màu thẻ & thanh tiến độ:</span>
-              <button type="button" onclick="selectCardColor('sky')" data-color="sky" title="Xanh dương"
-                class="color-dot w-5 h-5 rounded-full bg-sky-200 border-2 border-sky-600 ring-2 ring-sky-200 transition"></button>
-              <button type="button" onclick="selectCardColor('emerald')" data-color="emerald" title="Xanh ngọc"
-                class="color-dot w-5 h-5 rounded-full bg-emerald-200 border border-emerald-400 hover:scale-110 transition"></button>
-              <button type="button" onclick="selectCardColor('amber')" data-color="amber" title="Vàng cam"
-                class="color-dot w-5 h-5 rounded-full bg-amber-200 border border-amber-400 hover:scale-110 transition"></button>
-              <button type="button" onclick="selectCardColor('rose')" data-color="rose" title="Hồng phấn"
-                class="color-dot w-5 h-5 rounded-full bg-rose-200 border border-rose-400 hover:scale-110 transition"></button>
-              <button type="button" onclick="selectCardColor('violet')" data-color="violet" title="Tím nhạt"
-                class="color-dot w-5 h-5 rounded-full bg-violet-200 border border-violet-400 hover:scale-110 transition"></button>
-            </div>
+            </h3>          
           </div>
-
           <form onsubmit="handlePostSubmit(event)" class="space-y-3">
             <input type="hidden" id="edit-post-id" value="" />
-            <input type="hidden" id="post-color" value="sky" />
             <div>
               <textarea id="post-content" rows="3"
                 onfocus="handleComposerFocus()" onblur="handleComposerBlur()"
@@ -301,7 +284,7 @@
               <textarea id="post-code" rows="4"
                 onfocus="handleComposerFocus()" onblur="handleComposerBlur()"
                 oninput="handleLiveTyping()" onpaste="handleComposerPaste(event)"
-                placeholder="# Nhập code Python tại đây...";
+                placeholder="# Nhập code Python tại đây..."
                 class="code-input w-full px-3.5 py-2.5 rounded-xl border border-indigo-200 bg-slate-50/90 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-xs sm:text-sm text-slate-800"></textarea>
 
               <!-- Khu vực hiển thị kết quả chạy thử Python trong khung soạn thảo -->
@@ -520,15 +503,15 @@
     window.pickGroupName = (name) => {
       document.getElementById("stu-group-name").value = name;
     };
-
-    const COLOR_KEYS = ["sky", "emerald", "amber", "rose", "violet"];
+const COLOR_KEYS = [
+      "sky", "emerald", "amber", "rose", "violet",
+      "cyan", "orange", "teal", "indigo", "fuchsia"
+    ];
 
     const CARD_THEMES = {
       sky: {
         label: "Xanh dương",
         card: "bg-sky-50/85 border-sky-200 hover:border-sky-300",
-        dotBase: "bg-sky-200 border-sky-400",
-        dotActive: "bg-sky-200 border-2 !border-sky-600 ring-2 ring-sky-200",
         bar: "from-sky-500 to-blue-600",
         badge: "bg-sky-50 text-sky-700 border-sky-200",
         indicator: "bg-sky-500",
@@ -537,8 +520,6 @@
       emerald: {
         label: "Xanh ngọc",
         card: "bg-emerald-50/85 border-emerald-200 hover:border-emerald-300",
-        dotBase: "bg-emerald-200 border-emerald-400",
-        dotActive: "bg-emerald-200 border-2 !border-emerald-600 ring-2 ring-emerald-200",
         bar: "from-emerald-500 to-teal-600",
         badge: "bg-emerald-50 text-emerald-700 border-emerald-200",
         indicator: "bg-emerald-500",
@@ -547,8 +528,6 @@
       amber: {
         label: "Vàng cam",
         card: "bg-amber-50/85 border-amber-200 hover:border-amber-300",
-        dotBase: "bg-amber-200 border-amber-400",
-        dotActive: "bg-amber-200 border-2 !border-amber-600 ring-2 ring-amber-200",
         bar: "from-amber-400 to-orange-500",
         badge: "bg-amber-50 text-amber-800 border-amber-200",
         indicator: "bg-amber-500",
@@ -557,8 +536,6 @@
       rose: {
         label: "Hồng phấn",
         card: "bg-rose-50/85 border-rose-200 hover:border-rose-300",
-        dotBase: "bg-rose-200 border-rose-400",
-        dotActive: "bg-rose-200 border-2 !border-rose-600 ring-2 ring-rose-200",
         bar: "from-rose-500 to-pink-600",
         badge: "bg-rose-50 text-rose-700 border-rose-200",
         indicator: "bg-rose-500",
@@ -567,12 +544,50 @@
       violet: {
         label: "Tím nhạt",
         card: "bg-violet-50/85 border-violet-200 hover:border-violet-300",
-        dotBase: "bg-violet-200 border-violet-400",
-        dotActive: "bg-violet-200 border-2 !border-violet-600 ring-2 ring-violet-200",
         bar: "from-violet-500 to-purple-600",
         badge: "bg-violet-50 text-violet-700 border-violet-200",
         indicator: "bg-violet-500",
         rowBg: "border-violet-200/90 bg-violet-50/35"
+      },
+      cyan: {
+        label: "Xanh lơ",
+        card: "bg-cyan-50/85 border-cyan-200 hover:border-cyan-300",
+        bar: "from-cyan-500 to-sky-600",
+        badge: "bg-cyan-50 text-cyan-700 border-cyan-200",
+        indicator: "bg-cyan-500",
+        rowBg: "border-cyan-200/90 bg-cyan-50/35"
+      },
+      orange: {
+        label: "Cam đậm",
+        card: "bg-orange-50/85 border-orange-200 hover:border-orange-300",
+        bar: "from-orange-500 to-red-500",
+        badge: "bg-orange-50 text-orange-700 border-orange-200",
+        indicator: "bg-orange-500",
+        rowBg: "border-orange-200/90 bg-orange-50/35"
+      },
+      teal: {
+        label: "Xanh cổ vịt",
+        card: "bg-teal-50/85 border-teal-200 hover:border-teal-300",
+        bar: "from-teal-500 to-emerald-600",
+        badge: "bg-teal-50 text-teal-700 border-teal-200",
+        indicator: "bg-teal-500",
+        rowBg: "border-teal-200/90 bg-teal-50/35"
+      },
+      indigo: {
+        label: "Xanh chàm",
+        card: "bg-indigo-50/85 border-indigo-200 hover:border-indigo-300",
+        bar: "from-indigo-500 to-blue-700",
+        badge: "bg-indigo-50 text-indigo-700 border-indigo-200",
+        indicator: "bg-indigo-500",
+        rowBg: "border-indigo-200/90 bg-indigo-50/35"
+      },
+      fuchsia: {
+        label: "Hồng tím",
+        card: "bg-fuchsia-50/85 border-fuchsia-200 hover:border-fuchsia-300",
+        bar: "from-fuchsia-500 to-pink-600",
+        badge: "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200",
+        indicator: "bg-fuchsia-500",
+        rowBg: "border-fuchsia-200/90 bg-fuchsia-50/35"
       }
     };
 
@@ -584,14 +599,23 @@
     }
 
     function getDefaultColorForGroup(groupName) {
-      const match = String(groupName || "").match(/(\d+)/);
+      const str = String(groupName || "").trim();
+      // 1. Nếu tên nhóm có số (VD: Nhóm 1, nhóm 2... Nhóm 10) -> chia tuần tự không trùng
+      const match = str.match(/(\d+)/);
       if (match) {
         const num = parseInt(match[1], 10);
         if (!isNaN(num) && num > 0) {
           return COLOR_KEYS[(num - 1) % COLOR_KEYS.length];
         }
       }
-      return "sky";
+      // 2. Nếu nhóm đặt tên chữ tự do (VD: Nhóm Sao Mai) -> băm tên để tự cấp màu cố định
+      const norm = normalizeVi(str);
+      if (!norm) return COLOR_KEYS[0];
+      let hash = 0;
+      for (let i = 0; i < norm.length; i++) {
+        hash = (hash * 31 + norm.charCodeAt(i)) >>> 0;
+      }
+      return COLOR_KEYS[hash % COLOR_KEYS.length];
     }
 
     const state = {
@@ -1130,7 +1154,7 @@
         prog.groups.forEach(g => {
           const norm = normalizeVi(g.groupName);
           if (!norm) return;
-          const validColor = (g.cardColor && CARD_THEMES[g.cardColor]) ? g.cardColor : getDefaultColorForGroup(g.groupName);
+          const validColor = getDefaultColorForGroup(g.groupName);
           const hasSub = g.hasSubmitted !== undefined ? Boolean(g.hasSubmitted) : true;
           groupMap.set(norm, {
             normKey: norm,
@@ -1390,19 +1414,7 @@
       }
     };
 
-    window.selectCardColor = (colorKey) => {
-      const safeKey = (colorKey && CARD_THEMES[colorKey]) ? colorKey : getDefaultColorForGroup(state.groupName);
-      document.getElementById("post-color").value = safeKey;
-      document.querySelectorAll(".color-dot").forEach(btn => {
-        const key = btn.getAttribute("data-color");
-        const theme = resolveTheme(key);
-        if (key === safeKey) {
-          btn.className = `color-dot w-5 h-5 rounded-full ${theme.dotActive} transition`;
-        } else {
-          btn.className = `color-dot w-5 h-5 rounded-full ${theme.dotBase} border hover:scale-110 transition`;
-        }
-      });
-      renderPerGroupProgress();
+    renderPerGroupProgress();
     };
 
     window.toggleCodeDrawer = (forceState = null) => {
@@ -1549,7 +1561,6 @@
         document.getElementById("student-banner").classList.remove("hidden");
         document.getElementById("student-composer").classList.remove("hidden");
         toggleCodeDrawer(true);
-        selectCardColor(getDefaultColorForGroup(state.groupName));
         updateStudentSelfMonitorUI();
       }
 
@@ -1715,8 +1726,7 @@
 const content = document.getElementById("post-content").value.trim();
 // Luôn lấy nội dung code Python kể cả khi người dùng bấm thu gọn khung code
 const code = document.getElementById("post-code").value.replace(/\s+$/, "");
-const rawColor = document.getElementById("post-color").value;
-const cardColor = (rawColor && CARD_THEMES[rawColor]) ? rawColor : getDefaultColorForGroup(state.groupName);
+const cardColor = getDefaultColorForGroup(state.groupName);
 const editId = document.getElementById("edit-post-id").value;
 
 if (!content && !code) {
@@ -1928,9 +1938,7 @@ const contributions = Array.isArray(post.contributions) ? post.contributions : [
           }
         }
 
-        const resolvedColorKey = (post.cardColor && CARD_THEMES[post.cardColor])
-          ? post.cardColor
-          : getDefaultColorForGroup(post.groupName);
+        const resolvedColorKey = getDefaultColorForGroup(post.groupName);
         const themeClass = resolveTheme(resolvedColorKey).card;
         const highlightCardClass = post.isHighlighted
           ? "ring-2 ring-amber-400 bg-amber-50/90 border-amber-300 shadow-md"
@@ -2264,10 +2272,6 @@ window.toggleCommentBox = (postId, forceState = null) => {
       
       document.getElementById("post-content").value = effective.displayContent;
       document.getElementById("post-code").value = effective.displayCode;
-      const safeColor = (post.cardColor && CARD_THEMES[post.cardColor])
-        ? post.cardColor
-        : getDefaultColorForGroup(state.groupName);
-      selectCardColor(safeColor);
       toggleCodeDrawer(true);
       clearComposerOutput();
 
@@ -2287,7 +2291,6 @@ window.toggleCommentBox = (postId, forceState = null) => {
      
       document.getElementById("post-content").value = "";
       document.getElementById("post-code").value = "";
-      selectCardColor(getDefaultColorForGroup(state.groupName));
       toggleCodeDrawer(true);
       clearComposerOutput();
 
