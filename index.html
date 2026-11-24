@@ -247,13 +247,31 @@
            THẺ 1: KHÔNG GIAN THẢO LUẬN (SOẠN THẢO + LƯỚI THẺ BÀI)
       ========================================================== -->
       <div id="panel-discussion" class="space-y-4">
+       <!-- THANH THU GỌN KHI NHÓM ĐÃ CÓ THẺ -->
+        <div id="composer-collapsed-bar" class="hidden bg-white rounded-2xl border border-indigo-200/80 shadow-sm px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+          <div class="text-xs sm:text-sm text-slate-600 flex items-center gap-2">
+            <i data-lucide="info" class="w-4 h-4 text-indigo-600 shrink-0"></i>
+            <span>Nhóm bạn đã có thẻ bên dưới. Bấm <strong>+ Góp ý thành viên</strong> trên thẻ để thảo luận chung, hoặc tạo thêm thẻ khác nếu cần.</span>
+          </div>
+          <button type="button" onclick="openNewComposer()"
+            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-sm transition shrink-0">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            <span>Tạo thêm thẻ mới</span>
+          </button>
+        </div>
+
         <!-- KHUNG SOẠN THẢO THẺ BÀI KIỂU PADLET -->
         <section id="student-composer" class="hidden bg-white rounded-2xl border border-slate-200 shadow-sm p-5 transition-all">
           <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
             <h3 class="font-bold text-slate-800 flex items-center gap-2 text-base">
               <i data-lucide="message-square-plus" class="w-5 h-5 text-indigo-600"></i>
               <span id="composer-heading">Tạo thẻ thảo luận mới</span>
-            </h3>          
+            </h3>
+            <button type="button" id="btn-close-composer" onclick="closeNewComposer()"
+              class="hidden inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition">
+              <i data-lucide="x" class="w-3.5 h-3.5"></i>
+              <span>Thu gọn</span>
+            </button>
           </div>
           <form onsubmit="handlePostSubmit(event)" class="space-y-3">
             <input type="hidden" id="edit-post-id" value="" />
@@ -634,6 +652,7 @@ const COLOR_KEYS = [
       openCommentBoxes: {},
       commentDrafts: {},
       codeDrawerOpen: true, // Mở sẵn khung code Python để HS nhập code không bị sót
+     forceOpenComposer: false,
       pollTimer: null,
       composerFocused: false,
       lastTypingAt: 0,
@@ -1548,6 +1567,7 @@ const COLOR_KEYS = [
         document.getElementById("student-status-pill").classList.add("hidden");
         document.getElementById("student-banner").classList.add("hidden");
         document.getElementById("student-composer").classList.add("hidden");
+        document.getElementById("composer-collapsed-bar").classList.add("hidden");
       } else {
         const displayLabel = state.memberName && state.memberName !== state.groupName
           ? `Nhóm: ${state.groupName} (${state.memberName})`
@@ -1851,9 +1871,47 @@ if (!content && !code) {
       btnWrap.innerHTML = html;
     }
 
+    window.openNewComposer = () => {
+      state.forceOpenComposer = true;
+      updateStudentComposerVisibility();
+      document.getElementById("post-content").focus();
+    };
+
+    window.closeNewComposer = () => {
+      state.forceOpenComposer = false;
+      updateStudentComposerVisibility();
+    };
+
+    function updateStudentComposerVisibility() {
+      const composer = document.getElementById("student-composer");
+      const collapsedBar = document.getElementById("composer-collapsed-bar");
+      const closeBtn = document.getElementById("btn-close-composer");
+      if (!composer || !collapsedBar) return;
+
+      if (state.role !== "student") {
+        composer.classList.add("hidden");
+        collapsedBar.classList.add("hidden");
+        return;
+      }
+
+      const isEditing = Boolean(document.getElementById("edit-post-id").value);
+      const hasMyGroupPost = state.posts.some(p => checkIsMine(p));
+
+      if (hasMyGroupPost && !isEditing && !state.forceOpenComposer) {
+        composer.classList.add("hidden");
+        collapsedBar.classList.remove("hidden");
+      } else {
+        composer.classList.remove("hidden");
+        collapsedBar.classList.add("hidden");
+        if (closeBtn) {
+          closeBtn.classList.toggle("hidden", !hasMyGroupPost || isEditing);
+        }
+      }
+    }
+
     function renderPosts() {
-      const grid = document.getElementById("posts-grid");
-      const activeEl = document.activeElement;
+      updateStudentComposerVisibility();
+      const grid = document.getElementById("posts-grid");      const activeEl = document.activeElement;
       const focusedInputId = (activeEl && activeEl.id && (activeEl.id.startsWith("comment-input-") || activeEl.id.startsWith("comment-name-")))
         ? activeEl.id
         : null;
@@ -2259,7 +2317,7 @@ window.toggleCommentBox = (postId, forceState = null) => {
       const effective = getEffectivePostData(post);
       switchMainTab("discussion");
       document.getElementById("edit-post-id").value = post.id;
-      
+      updateStudentComposerVisibility();
       document.getElementById("post-content").value = effective.displayContent;
       document.getElementById("post-code").value = effective.displayCode;
       toggleCodeDrawer(true);
@@ -2278,7 +2336,8 @@ window.toggleCommentBox = (postId, forceState = null) => {
 
     window.resetComposer = () => {
       document.getElementById("edit-post-id").value = "";
-     
+     state.forceOpenComposer = false;
+updateStudentComposerVisibility();
       document.getElementById("post-content").value = "";
       document.getElementById("post-code").value = "";
       toggleCodeDrawer(true);
