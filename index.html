@@ -173,7 +173,7 @@
               <span id="board-post-count">0 thẻ bài</span>
               <span>•</span>
               <span class="inline-flex items-center gap-1 text-emerald-600 font-medium">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Đồng bộ thời gian thực
+               
               </span>
             </div>
           </div>
@@ -1906,8 +1906,7 @@ if (!content && !code) {
 const contributions = Array.isArray(post.contributions) ? post.contributions : [];
         const isCommentOpen = Boolean(state.openCommentBoxes[post.id]);
         const commentDraft = state.commentDrafts[post.id] || "";
-        const needAskName = !state.memberName || normalizeVi(state.memberName) === normalizeVi(state.groupName);
-
+       
         const uniqueParticipants = new Set(editors.map(ed => ed.name).filter(Boolean));
         contributions.forEach(c => { if (c.memberName) uniqueParticipants.add(c.memberName); });
         const totalParticipantsCount = Math.max(editorCount, uniqueParticipants.size);
@@ -2111,15 +2110,7 @@ const contributions = Array.isArray(post.contributions) ? post.contributions : [
 
               ${(isMine && isCommentOpen) ? `
                 <div class="p-2.5 rounded-xl bg-white border border-indigo-200 shadow-xs space-y-2">
-                  ${needAskName ? `
-                    <input id="comment-name-${post.id}" type="text" placeholder="Nhập họ tên của bạn (VD: Nguyễn Minh Anh)..."
-                      class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none" />
-                  ` : `
-                    <div class="text-[11px] text-slate-500">
-                      Góp ý dưới tên: <strong class="text-indigo-700">${escapeHtml(state.memberName)}</strong>
-                    </div>
-                  `}
-                  <textarea id="comment-input-${post.id}" rows="2"
+                    <textarea id="comment-input-${post.id}" rows="2"
                     oninput="saveCommentDraft('${post.id}', this.value)"
                     onpaste="handleComposerPaste(event)"
                     onkeydown="if(event.ctrlKey && event.key === 'Enter'){ submitMemberComment('${post.id}'); }"
